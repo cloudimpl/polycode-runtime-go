@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"encoding/json"
 	"errors"
 	errors2 "github.com/cloudimpl/byte-os/sdk/errors"
 	"github.com/gin-gonic/gin"
@@ -8,6 +9,14 @@ import (
 	"log"
 	"reflect"
 )
+
+func ValueToServiceComplete(output any) ServiceCompleteEvent {
+	return ServiceCompleteEvent{
+		Output:  output,
+		IsError: false,
+		Error:   errors2.Error{},
+	}
+}
 
 func ErrorToServiceComplete(err errors2.Error, stacktraceStr string) ServiceCompleteEvent {
 	var stacktrace errors2.Stacktrace
@@ -132,4 +141,13 @@ func LoadRoutes(httpHandler *gin.Engine) []RouteData {
 		}
 	}
 	return routes
+}
+
+func ConvertType(input any, output any) error {
+	in, err := json.Marshal(input)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(in, output)
 }

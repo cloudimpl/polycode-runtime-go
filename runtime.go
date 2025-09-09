@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cloudimpl/byte-os/sdk"
 	"github.com/gin-gonic/gin"
 	"log"
 	"runtime/debug"
@@ -22,6 +23,7 @@ type ClientRuntimeImpl struct {
 	serviceMap  map[string]Service
 	httpHandler *gin.Engine
 	client      ServiceClient
+	validator   sdk.Validator
 }
 
 func (c ClientRuntimeImpl) getService(serviceName string) (Service, error) {
@@ -116,7 +118,7 @@ func (c ClientRuntimeImpl) RunService(ctx context.Context, event ServiceStartEve
 	service, err := c.getService(event.Service)
 	if err != nil {
 		err2 := ErrServiceExecError.Wrap(err)
-		taskLogger.Error().Msg(err2.Error())
+		fmt.Printf("failed to get service %s\n", err.Error())
 		return ErrorToServiceComplete(err2, "")
 	}
 
@@ -130,15 +132,15 @@ func (c ClientRuntimeImpl) RunService(ctx context.Context, event ServiceStartEve
 	err = ConvertType(event.Input, inputObj)
 	if err != nil {
 		err2 := ErrBadRequest.Wrap(err)
-		taskLogger.Error().Msg(err2.Error())
-		return ErrorToServiceComplete(err2, "")
+		fmt.Printf("failed to convert input %s\n", err.Error())
+		return ErrorToServiceComplete(err2, ""), nil
 	}
 
 	err = currentValidator.Validate(inputObj)
 	if err != nil {
 		err2 := ErrBadRequest.Wrap(err)
-		taskLogger.Error().Msg(err2.Error())
-		return ErrorToServiceComplete(err2, "")
+		fmt.Printf("failed to validate input %s\n", err.Error())
+		return ErrorToServiceComplete(err2, ""), nil
 	}
 
 	ctxImpl := &ContextImpl{
@@ -178,7 +180,7 @@ func (c ClientRuntimeImpl) RunService(ctx context.Context, event ServiceStartEve
 }
 
 func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt ApiCompleteEvent, err error) {
-	taskLogger.Info().Msg(fmt.Sprintf("api started %s %s", event.Request.Method, event.Request.Path))
+	fmt.Printf("api started %s %s", event.Request.Method, event.Request.Path)
 
 	defer func() {
 		// Recover from panic and check for a specific error
@@ -187,7 +189,7 @@ func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt
 
 			if ok {
 				if errors.Is(recovered, ErrTaskStopped) {
-					taskLogger.Info().Msg("api stopped")
+					fmt.Printf("api stopped %s %s", event.Request.Method, event.Request.Path)
 					evt = ApiCompleteEvent{
 						Response: ApiResponse{
 							StatusCode:      202,
@@ -199,8 +201,7 @@ func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt
 				} else {
 					stackTrace := string(debug.Stack())
 					fmt.Printf("stack trace %s\n", stackTrace)
-
-					taskLogger.Error().Msg(recovered.Error())
+					fmt.Printf("recovered %v", r)
 					err2 := ErrInternal.Wrap(recovered)
 					evt = ApiCompleteEvent{
 						Response: ApiResponse{
@@ -216,7 +217,7 @@ func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt
 				fmt.Printf("stack trace %s\n", stackTrace)
 
 				errorStr := fmt.Sprintf("recoverted %v", r)
-				taskLogger.Error().Msg(errorStr)
+				fmt.Printf("recoverted %v", r)
 				err2 := ErrInternal.Wrap(fmt.Errorf(errorStr))
 				evt = ApiCompleteEvent{
 					Response: ApiResponse{
@@ -230,10 +231,10 @@ func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt
 		}
 	}()
 
-	if httpHandler == nil {
+	if c.httpHandler == nil {
 		err2 := ErrApiExecError.Wrap(errors.New("http handler not set"))
 		taskLogger.Error().Msg(err2.Error())
-		return ErrorToApiComplete(err2)
+		return ErrorToApiComplete(err2), nil
 	}
 
 	ctxImpl := &ContextImpl{
@@ -252,13 +253,13 @@ func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt
 	httpReq, err := ConvertToHttpRequest(newCtx, event.Request)
 	if err != nil {
 		err2 := ErrApiExecError.Wrap(err)
-		taskLogger.Error().Msg(err2.Error())
-		return ErrorToApiComplete(err2)
+		fmt.Printf("failed to convert http request %s\n", err.Error())
+		return ErrorToApiComplete(err2), nil
 	}
 
 	res := ManualInvokeHandler(httpHandler, httpReq)
 	taskLogger.Info().Msg("api completed")
 	return ApiCompleteEvent{
 		Response: res,
-	}
+	}, nil
 }
