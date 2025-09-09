@@ -1,4 +1,4 @@
-package _go
+package runtime
 
 import "github.com/cloudimpl/byte-os/sdk/errors"
 

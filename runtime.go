@@ -1,21 +1,88 @@
-package _go
+package runtime
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"log"
 	"runtime/debug"
 )
 
 type ClientRuntime interface {
-	RunService(ctx context.Context, event ServiceStartEvent) (evt ServiceCompleteEvent)
-	RunApi(ctx context.Context, event ApiStartEvent) (evt ApiCompleteEvent)
+	RegisterService(service Service) error
+	RegisterApi(engine *gin.Engine) error
+	Start() error
+	RunService(ctx context.Context, event ServiceStartEvent) (evt ServiceCompleteEvent, err error)
+	RunApi(ctx context.Context, event ApiStartEvent) (evt ApiCompleteEvent, err error)
 }
 
 type ClientRuntimeImpl struct {
+	env         ClientEnv
+	serviceMap  map[string]Service
+	httpHandler *gin.Engine
+	client      ServiceClient
 }
 
-func (c ClientRuntimeImpl) RunService(ctx context.Context, event ServiceStartEvent) (evt ServiceCompleteEvent) {
+func (c ClientRuntimeImpl) getService(serviceName string) (Service, error) {
+	service := c.serviceMap[serviceName]
+	if service == nil {
+		return nil, fmt.Errorf("client: service %s not registered", serviceName)
+	}
+	return service, nil
+}
+
+func (c ClientRuntimeImpl) getApi() (*gin.Engine, error) {
+	if c.httpHandler == nil {
+		return nil, errors.New("client: api not registered")
+	}
+	return c.httpHandler, nil
+}
+
+func (c ClientRuntimeImpl) RegisterService(service Service) error {
+	log.Println("client: register service ", service.GetName())
+
+	if c.serviceMap[service.GetName()] != nil {
+		return fmt.Errorf("client: service %s already registered", service.GetName())
+	} else {
+		c.serviceMap[service.GetName()] = service
+		return nil
+	}
+}
+
+func (c ClientRuntimeImpl) RegisterApi(engine *gin.Engine) error {
+	if c.httpHandler != nil {
+		return errors.New("client: api already registered")
+	}
+
+	c.httpHandler = engine
+	return nil
+}
+
+func (c ClientRuntimeImpl) Start() error {
+	services, err := ExtractServiceDescription(c.serviceMap)
+	if err != nil {
+		return fmt.Errorf("client: failed to extract service description: %w", err)
+	}
+
+	req := StartAppRequest{
+		AppName:  c.env.AppName,
+		AppPort:  c.env.AppPort,
+		Services: services,
+		Routes:   LoadRoutes(c.httpHandler),
+	}
+
+	for {
+		err = c.client.StartApp(req)
+		if err == nil {
+			break
+		}
+	}
+
+	return nil
+}
+
+func (c ClientRuntimeImpl) RunService(ctx context.Context, event ServiceStartEvent) (evt ServiceCompleteEvent, err error) {
 	fmt.Printf("service started %s.%s", event.Service, event.Method)
 
 	defer func() {
@@ -46,7 +113,7 @@ func (c ClientRuntimeImpl) RunService(ctx context.Context, event ServiceStartEve
 		}
 	}()
 
-	service, err := getService(event.Service)
+	service, err := c.getService(event.Service)
 	if err != nil {
 		err2 := ErrServiceExecError.Wrap(err)
 		taskLogger.Error().Msg(err2.Error())
@@ -110,7 +177,7 @@ func (c ClientRuntimeImpl) RunService(ctx context.Context, event ServiceStartEve
 	return serviceCompleteEvent
 }
 
-func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt ApiCompleteEvent) {
+func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt ApiCompleteEvent, err error) {
 	taskLogger.Info().Msg(fmt.Sprintf("api started %s %s", event.Request.Method, event.Request.Path))
 
 	defer func() {
