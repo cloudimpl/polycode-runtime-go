@@ -1,13 +1,18 @@
 package runtime
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	errors2 "github.com/cloudimpl/byte-os/sdk/errors"
 	"github.com/gin-gonic/gin"
 	"github.com/invopop/jsonschema"
+	"io"
 	"log"
+	"net/http"
 	"reflect"
+	"strings"
 )
 
 func ValueToServiceComplete(output any) ServiceCompleteEvent {
@@ -150,4 +155,39 @@ func ConvertType(input any, output any) error {
 	}
 
 	return json.Unmarshal(in, output)
+}
+
+func ConvertToHttpRequest(ctx context.Context, apiReq ApiRequest) (*http.Request, error) {
+	// Build the URL
+	url := apiReq.Path
+	if len(apiReq.Query) > 0 {
+		queryParams := "?"
+		for key, value := range apiReq.Query {
+			queryParams += key + "=" + value + "&"
+		}
+		queryParams = strings.TrimSuffix(queryParams, "&")
+		url += queryParams
+	}
+
+	// Create a new HTTP request
+	var body io.Reader
+	if apiReq.Body != "" {
+		body = bytes.NewReader([]byte(apiReq.Body))
+	} else {
+		body = nil
+	}
+
+	println("client: create http request with workflow context")
+	req, err := http.NewRequestWithContext(ctx, apiReq.Method, url, body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add headers
+	for key, value := range apiReq.Header {
+		req.Header.Set(key, value)
+	}
+	req.Host = apiReq.Host
+
+	return req, nil
 }

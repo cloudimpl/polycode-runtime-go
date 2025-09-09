@@ -119,14 +119,14 @@ func (c ClientRuntimeImpl) RunService(ctx context.Context, event ServiceStartEve
 	if err != nil {
 		err2 := ErrServiceExecError.Wrap(err)
 		fmt.Printf("failed to get service %s\n", err.Error())
-		return ErrorToServiceComplete(err2, "")
+		return ErrorToServiceComplete(err2, ""), nil
 	}
 
 	inputObj, err := service.GetInputType(event.Method)
 	if err != nil {
 		err2 := ErrServiceExecError.Wrap(err)
-		taskLogger.Error().Msg(err2.Error())
-		return ErrorToServiceComplete(err2, "")
+		fmt.Printf("failed to get input type %s\n", err.Error())
+		return ErrorToServiceComplete(err2, ""), nil
 	}
 
 	err = ConvertType(event.Input, inputObj)
@@ -136,7 +136,7 @@ func (c ClientRuntimeImpl) RunService(ctx context.Context, event ServiceStartEve
 		return ErrorToServiceComplete(err2, ""), nil
 	}
 
-	err = currentValidator.Validate(inputObj)
+	err = c.validator.Validate(inputObj)
 	if err != nil {
 		err2 := ErrBadRequest.Wrap(err)
 		fmt.Printf("failed to validate input %s\n", err.Error())
@@ -157,26 +157,22 @@ func (c ClientRuntimeImpl) RunService(ctx context.Context, event ServiceStartEve
 
 	var ret any
 	if service.IsWorkflow(event.Method) {
-		taskLogger.Info().Msg(fmt.Sprintf("service %s exec workflow %s with session id %s", event.Service,
-			event.Method, event.SessionId))
+		fmt.Printf("service %s exec workflow %s with session id %s", event.Service, event.Method, event.SessionId)
 		ret, err = service.ExecuteWorkflow(ctxImpl, event.Method, inputObj)
 	} else {
-		taskLogger.Info().Msg(fmt.Sprintf("service %s exec handler %s with session id %s", event.Service,
-			event.Method, event.SessionId))
+		fmt.Printf("service %s exec handler %s with session id %s", event.Service, event.Method, event.SessionId)
 		ret, err = service.ExecuteService(ctxImpl, event.Method, inputObj)
 	}
 
 	if err != nil {
 		err2 := ErrServiceExecError.Wrap(err)
-		taskLogger.Error().Msg(err2.Error())
-		return ErrorToServiceComplete(err2, "")
+		fmt.Printf("failed to execute service %s\n", err.Error())
+		return ErrorToServiceComplete(err2, ""), nil
 	}
 
-	taskLogger.Info().Msg("service completed")
+	fmt.Printf("service %s exec success %s\n", event.Service, event.Method)
 	serviceCompleteEvent := ValueToServiceComplete(ret)
-	serviceCompleteEvent.Meta = meta
-
-	return serviceCompleteEvent
+	return serviceCompleteEvent, nil
 }
 
 func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt ApiCompleteEvent, err error) {
@@ -233,7 +229,7 @@ func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt
 
 	if c.httpHandler == nil {
 		err2 := ErrApiExecError.Wrap(errors.New("http handler not set"))
-		taskLogger.Error().Msg(err2.Error())
+		fmt.Printf("api stopped %s %s, reason: %s", event.Request.Method, event.Request.Path, err2.Error())
 		return ErrorToApiComplete(err2), nil
 	}
 
@@ -257,8 +253,8 @@ func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt
 		return ErrorToApiComplete(err2), nil
 	}
 
-	res := ManualInvokeHandler(httpHandler, httpReq)
-	taskLogger.Info().Msg("api completed")
+	res := ManualInvokeHandler(c.httpHandler, httpReq)
+	fmt.Printf("api completed %s %s\n", event.Request.Method, event.Request.Path)
 	return ApiCompleteEvent{
 		Response: res,
 	}, nil
