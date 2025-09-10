@@ -11,7 +11,7 @@ import (
 	"runtime/debug"
 )
 
-type ClientRuntimeImpl struct {
+type ClientRuntime struct {
 	env         ClientEnv
 	serviceMap  map[string]runtime.Service
 	httpHandler *gin.Engine
@@ -19,7 +19,7 @@ type ClientRuntimeImpl struct {
 	validator   sdk.Validator
 }
 
-func (c ClientRuntimeImpl) getService(serviceName string) (runtime.Service, error) {
+func (c ClientRuntime) getService(serviceName string) (runtime.Service, error) {
 	service := c.serviceMap[serviceName]
 	if service == nil {
 		return nil, fmt.Errorf("client: service %s not registered", serviceName)
@@ -27,14 +27,14 @@ func (c ClientRuntimeImpl) getService(serviceName string) (runtime.Service, erro
 	return service, nil
 }
 
-func (c ClientRuntimeImpl) getApi() (*gin.Engine, error) {
+func (c ClientRuntime) getApi() (*gin.Engine, error) {
 	if c.httpHandler == nil {
 		return nil, errors.New("client: api not registered")
 	}
 	return c.httpHandler, nil
 }
 
-func (c ClientRuntimeImpl) RegisterService(service runtime.Service) error {
+func (c ClientRuntime) RegisterService(service runtime.Service) error {
 	log.Println("client: register service ", service.GetName())
 
 	if c.serviceMap[service.GetName()] != nil {
@@ -45,7 +45,7 @@ func (c ClientRuntimeImpl) RegisterService(service runtime.Service) error {
 	}
 }
 
-func (c ClientRuntimeImpl) RegisterApi(httpHandler *gin.Engine) error {
+func (c ClientRuntime) RegisterApi(httpHandler *gin.Engine) error {
 	if c.httpHandler != nil {
 		return errors.New("client: api already registered")
 	}
@@ -54,7 +54,7 @@ func (c ClientRuntimeImpl) RegisterApi(httpHandler *gin.Engine) error {
 	return nil
 }
 
-func (c ClientRuntimeImpl) Start() error {
+func (c ClientRuntime) Start() error {
 	services, err := ExtractServiceDescription(c.serviceMap)
 	if err != nil {
 		return fmt.Errorf("client: failed to extract service description: %w", err)
@@ -77,7 +77,7 @@ func (c ClientRuntimeImpl) Start() error {
 	return nil
 }
 
-func (c ClientRuntimeImpl) RunService(ctx context.Context, event ServiceStartEvent) (evt ServiceCompleteEvent, err error) {
+func (c ClientRuntime) RunService(ctx context.Context, event ServiceStartEvent) (evt ServiceCompleteEvent) {
 	fmt.Printf("service started %s.%s", event.Service, event.Method)
 
 	defer func() {
@@ -112,28 +112,28 @@ func (c ClientRuntimeImpl) RunService(ctx context.Context, event ServiceStartEve
 	if err != nil {
 		err2 := ErrServiceExecError.Wrap(err)
 		fmt.Printf("failed to get service %s\n", err.Error())
-		return ErrorToServiceComplete(err2, ""), nil
+		return ErrorToServiceComplete(err2, "")
 	}
 
 	inputObj, err := service.GetInputType(event.Method)
 	if err != nil {
 		err2 := ErrServiceExecError.Wrap(err)
 		fmt.Printf("failed to get input type %s\n", err.Error())
-		return ErrorToServiceComplete(err2, ""), nil
+		return ErrorToServiceComplete(err2, "")
 	}
 
 	err = ConvertType(event.Input, inputObj)
 	if err != nil {
 		err2 := ErrBadRequest.Wrap(err)
 		fmt.Printf("failed to convert input %s\n", err.Error())
-		return ErrorToServiceComplete(err2, ""), nil
+		return ErrorToServiceComplete(err2, "")
 	}
 
 	err = c.validator.Validate(inputObj)
 	if err != nil {
 		err2 := ErrBadRequest.Wrap(err)
 		fmt.Printf("failed to validate input %s\n", err.Error())
-		return ErrorToServiceComplete(err2, ""), nil
+		return ErrorToServiceComplete(err2, "")
 	}
 
 	ctxImpl := &Context{
@@ -156,15 +156,15 @@ func (c ClientRuntimeImpl) RunService(ctx context.Context, event ServiceStartEve
 	if err != nil {
 		err2 := ErrServiceExecError.Wrap(err)
 		fmt.Printf("failed to execute service %s\n", err.Error())
-		return ErrorToServiceComplete(err2, ""), nil
+		return ErrorToServiceComplete(err2, "")
 	}
 
 	fmt.Printf("service %s exec success %s\n", event.Service, event.Method)
 	serviceCompleteEvent := ValueToServiceComplete(ret)
-	return serviceCompleteEvent, nil
+	return serviceCompleteEvent
 }
 
-func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt ApiCompleteEvent, err error) {
+func (c ClientRuntime) RunApi(ctx context.Context, event ApiStartEvent) (evt ApiCompleteEvent) {
 	fmt.Printf("api started %s %s", event.Request.Method, event.Request.Path)
 
 	defer func() {
@@ -219,7 +219,7 @@ func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt
 	if c.httpHandler == nil {
 		err2 := ErrApiExecError.Wrap(errors.New("http handler not set"))
 		fmt.Printf("api stopped %s %s, reason: %s", event.Request.Method, event.Request.Path, err2.Error())
-		return ErrorToApiComplete(err2), nil
+		return ErrorToApiComplete(err2)
 	}
 
 	ctxImpl := &Context{
@@ -235,12 +235,12 @@ func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt
 	if err != nil {
 		err2 := ErrApiExecError.Wrap(err)
 		fmt.Printf("failed to convert http request %s\n", err.Error())
-		return ErrorToApiComplete(err2), nil
+		return ErrorToApiComplete(err2)
 	}
 
 	res := ManualInvokeHandler(c.httpHandler, httpReq)
 	fmt.Printf("api completed %s %s\n", event.Request.Method, event.Request.Path)
 	return ApiCompleteEvent{
 		Response: res,
-	}, nil
+	}
 }

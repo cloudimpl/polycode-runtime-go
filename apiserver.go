@@ -1,14 +1,20 @@
 package runtime
 
 import (
+	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 )
 
+type ApiServerListener interface {
+	RunService(ctx context.Context, event ServiceStartEvent) (evt ServiceCompleteEvent)
+	RunApi(ctx context.Context, event ApiStartEvent) (evt ApiCompleteEvent)
+}
+
 type ApiServer struct {
-	runtime   ClientRuntime
+	listener  ApiServerListener
 	ginEngine *gin.Engine
 }
 
@@ -40,7 +46,7 @@ func (s *ApiServer) invokeApiHandler(c *gin.Context) {
 		output = ErrorToApiComplete(ErrInternal.Wrap(err))
 		fmt.Printf("api task failed %s\n", err.Error())
 	} else {
-		output = s.runtime.RunApi(c, input)
+		output = s.listener.RunApi(c, input)
 		fmt.Println("api task success")
 	}
 
@@ -56,7 +62,7 @@ func (s *ApiServer) invokeServiceHandler(c *gin.Context) {
 		output = ErrorToServiceComplete(ErrInternal.Wrap(err), "")
 		fmt.Printf("service task failed %s\n", err.Error())
 	} else {
-		output = s.runtime.RunService(c, input)
+		output = s.listener.RunService(c, input)
 		fmt.Println("service task success")
 	}
 
