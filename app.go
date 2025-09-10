@@ -1,9 +1,8 @@
-package context
+package runtime
 
 import (
 	"context"
 	"fmt"
-	"github.com/cloudimpl/byte-os/runtime"
 	"github.com/cloudimpl/byte-os/sdk"
 )
 
@@ -12,11 +11,11 @@ type App struct {
 	sessionId     string
 	envId         string
 	appName       string
-	serviceClient runtime.ServiceClient
+	serviceClient ServiceClient
 }
 
 func (r App) RequestReply(options sdk.TaskOptions, method string, input any) Response {
-	req := runtime.ExecAppRequest{
+	req := ExecAppRequest{
 		EnvId:   r.envId,
 		AppName: r.appName,
 		Method:  method,
@@ -30,7 +29,7 @@ func (r App) RequestReply(options sdk.TaskOptions, method string, input any) Res
 		return Response{
 			output:  nil,
 			isError: true,
-			error:   runtime.ErrTaskExecError.Wrap(err),
+			error:   ErrTaskExecError.Wrap(err),
 		}
 	}
 
@@ -43,7 +42,7 @@ func (r App) RequestReply(options sdk.TaskOptions, method string, input any) Res
 }
 
 func (r App) Send(options sdk.TaskOptions, method string, input any) error {
-	req := runtime.ExecAppRequest{
+	req := ExecAppRequest{
 		EnvId:         r.envId,
 		AppName:       r.appName,
 		Method:        method,
@@ -55,7 +54,7 @@ func (r App) Send(options sdk.TaskOptions, method string, input any) error {
 	output, err := r.serviceClient.ExecApp(r.sessionId, req)
 	if err != nil {
 		fmt.Printf("client: exec task error: %v\n", err)
-		return runtime.ErrTaskExecError.Wrap(err)
+		return ErrTaskExecError.Wrap(err)
 	}
 
 	fmt.Printf("client: exec task output: %v\n", output)

@@ -1,21 +1,21 @@
-package context
+package runtime
 
 import (
 	"context"
 	"fmt"
-	"github.com/cloudimpl/byte-os/runtime"
+	"github.com/cloudimpl/byte-os/sdk"
 	"github.com/cloudimpl/byte-os/sdk/errors"
 )
 
 type Memo struct {
 	ctx           context.Context
 	sessionId     string
-	serviceClient runtime.ServiceClient
+	serviceClient ServiceClient
 	getter        func() (any, error)
 }
 
-func (f Memo) Get() Response {
-	req1 := runtime.ExecFuncRequest{
+func (f Memo) Get() sdk.Response {
+	req1 := ExecFuncRequest{
 		Input: nil,
 	}
 
@@ -25,7 +25,7 @@ func (f Memo) Get() Response {
 		return Response{
 			output:  nil,
 			isError: true,
-			error:   runtime.ErrTaskExecError.Wrap(err),
+			error:   ErrTaskExecError.Wrap(err),
 		}
 	}
 
@@ -43,7 +43,7 @@ func (f Memo) Get() Response {
 		response = Response{
 			output:  nil,
 			isError: true,
-			error:   runtime.ErrTaskExecError.Wrap(err),
+			error:   ErrTaskExecError.Wrap(err),
 		}
 	} else {
 		response = Response{
@@ -53,7 +53,7 @@ func (f Memo) Get() Response {
 		}
 	}
 
-	req2 := runtime.ExecFuncResult{
+	req2 := ExecFuncResult{
 		Input:   nil,
 		Output:  response.output,
 		IsError: response.isError,
@@ -66,7 +66,7 @@ func (f Memo) Get() Response {
 		return Response{
 			output:  nil,
 			isError: true,
-			error:   runtime.ErrTaskExecError.Wrap(err),
+			error:   ErrTaskExecError.Wrap(err),
 		}
 	}
 

@@ -1,15 +1,13 @@
-package context
-
-import "github.com/cloudimpl/byte-os/runtime"
+package runtime
 
 type ClientChannel struct {
 	name          string
 	sessionId     string
-	serviceClient runtime.ServiceClient
+	serviceClient ServiceClient
 }
 
 func (r ClientChannel) Emit(data any) error {
-	req := runtime.RealtimeEventEmitRequest{
+	req := RealtimeEventEmitRequest{
 		Channel: r.name,
 		Input:   data,
 	}

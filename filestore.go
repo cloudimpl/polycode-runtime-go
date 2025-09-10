@@ -1,15 +1,14 @@
-package context
+package runtime
 
 import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/cloudimpl/byte-os/runtime"
 	"github.com/cloudimpl/byte-os/sdk"
 )
 
 type Folder struct {
-	client    runtime.ServiceClient
+	client    ServiceClient
 	sessionId string
 	parent    sdk.Folder
 	name      string
@@ -37,7 +36,7 @@ func (f Folder) Folder(name string) sdk.Folder {
 }
 
 func (f Folder) CreateNewFolder(name string) (sdk.Folder, error) {
-	req := runtime.CreateFolderRequest{
+	req := CreateFolderRequest{
 		Folder: name,
 	}
 
@@ -60,7 +59,7 @@ func (f Folder) File(name string) sdk.File {
 }
 
 type File struct {
-	client    runtime.ServiceClient
+	client    ServiceClient
 	sessionId string
 	parent    sdk.Folder
 	name      string
@@ -79,7 +78,7 @@ func (f File) Path() string {
 }
 
 func (f File) Get() (bool, []byte, error) {
-	req := runtime.GetFileRequest{
+	req := GetFileRequest{
 		Key: f.Path(),
 	}
 
@@ -109,7 +108,7 @@ func (f File) Download(filePath string) error {
 }
 
 func (f File) GetDownloadLink() (string, error) {
-	req := runtime.GetFileRequest{
+	req := GetFileRequest{
 		Key: f.Path(),
 	}
 
@@ -129,7 +128,7 @@ func (f File) GetDownloadLink() (string, error) {
 func (f File) Save(data []byte) error {
 	// Encode the data as base64
 	base64Data := base64.StdEncoding.EncodeToString(data)
-	req := runtime.PutFileRequest{
+	req := PutFileRequest{
 		Key:      f.Path(),
 		TempFile: false,
 		Content:  base64Data,
@@ -150,7 +149,7 @@ func (f File) Upload(filePath string) error {
 }
 
 func (f File) GetUploadLink() (string, error) {
-	req := runtime.GetUploadLinkRequest{
+	req := GetUploadLinkRequest{
 		Key:      f.Path(),
 		TempFile: false,
 	}
@@ -169,7 +168,7 @@ func (f File) GetUploadLink() (string, error) {
 }
 
 func (f File) Delete() error {
-	req := runtime.DeleteFileRequest{
+	req := DeleteFileRequest{
 		Key: f.Path(),
 	}
 
@@ -183,7 +182,7 @@ func (f File) Delete() error {
 }
 
 func (f File) Rename(newName string) error {
-	req := runtime.RenameFileRequest{
+	req := RenameFileRequest{
 		OldKey: f.Path(),
 		NewKey: f.parent.Path() + "/" + newName,
 	}
@@ -199,7 +198,7 @@ func (f File) Rename(newName string) error {
 }
 
 func (f File) MoveTo(dest sdk.Folder) error {
-	req := runtime.RenameFileRequest{
+	req := RenameFileRequest{
 		OldKey: f.Path(),
 		NewKey: dest.Path() + "/" + f.name,
 	}

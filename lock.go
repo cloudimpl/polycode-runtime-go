@@ -1,20 +1,19 @@
-package context
+package runtime
 
 import (
-	"github.com/cloudimpl/byte-os/runtime"
 	"time"
 )
 
 type Lock struct {
-	client    runtime.ServiceClient
+	client    ServiceClient
 	sessionId string
 	key       string
 }
 
-func (l *Lock) Acquire(expireIn time.Duration) error {
+func (l Lock) Acquire(expireIn time.Duration) error {
 	ttl := time.Now().Unix() + int64(expireIn.Seconds())
 
-	req := runtime.AcquireLockRequest{
+	req := AcquireLockRequest{
 		Key: l.key,
 		TTL: ttl,
 	}
@@ -22,8 +21,8 @@ func (l *Lock) Acquire(expireIn time.Duration) error {
 	return l.client.AcquireLock(l.sessionId, req)
 }
 
-func (l *Lock) Release() error {
-	req := runtime.ReleaseLockRequest{
+func (l Lock) Release() error {
+	req := ReleaseLockRequest{
 		Key: l.key,
 	}
 

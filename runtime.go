@@ -20,13 +20,13 @@ type ClientRuntime interface {
 
 type ClientRuntimeImpl struct {
 	env         ClientEnv
-	serviceMap  map[string]Service
+	serviceMap  map[string]ClientService
 	httpHandler *gin.Engine
 	client      ServiceClient
 	validator   sdk.Validator
 }
 
-func (c ClientRuntimeImpl) getService(serviceName string) (Service, error) {
+func (c ClientRuntimeImpl) getService(serviceName string) (ClientService, error) {
 	service := c.serviceMap[serviceName]
 	if service == nil {
 		return nil, fmt.Errorf("client: service %s not registered", serviceName)
@@ -41,7 +41,7 @@ func (c ClientRuntimeImpl) getApi() (*gin.Engine, error) {
 	return c.httpHandler, nil
 }
 
-func (c ClientRuntimeImpl) RegisterService(service Service) error {
+func (c ClientRuntimeImpl) RegisterService(service ClientService) error {
 	log.Println("client: register service ", service.GetName())
 
 	if c.serviceMap[service.GetName()] != nil {
@@ -143,16 +143,12 @@ func (c ClientRuntimeImpl) RunService(ctx context.Context, event ServiceStartEve
 		return ErrorToServiceComplete(err2, ""), nil
 	}
 
-	ctxImpl := &ContextImpl{
-		ctx:           ctx,
-		sessionId:     event.SessionId,
-		dataStore:     newDatabase(serviceClient, event.SessionId),
-		fileStore:     newFileStore(serviceClient, event.SessionId),
-		config:        AppConfig{},
-		serviceClient: serviceClient,
-		logger:        taskLogger,
-		meta:          event.Meta,
-		authCtx:       event.AuthContext,
+	ctxImpl := &Context{
+		ctx:       ctx,
+		sessionId: event.SessionId,
+		client:    c.client,
+		meta:      event.Meta,
+		authCtx:   event.AuthContext,
 	}
 
 	var ret any

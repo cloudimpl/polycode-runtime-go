@@ -1,30 +1,29 @@
-package context
+package runtime
 
 import (
 	"fmt"
-	"github.com/cloudimpl/byte-os/runtime"
 	"github.com/cloudimpl/byte-os/sdk"
 	"time"
 )
 
 type UnsafeDataStoreBuilder struct {
-	client       runtime.ServiceClient
+	client       ServiceClient
 	sessionId    string
 	tenantId     string
 	partitionKey string
 }
 
-func (f *UnsafeDataStoreBuilder) WithTenantId(tenantId string) sdk.DataStoreBuilder {
+func (f UnsafeDataStoreBuilder) WithTenantId(tenantId string) sdk.DataStoreBuilder {
 	f.tenantId = tenantId
 	return f
 }
 
-func (f *UnsafeDataStoreBuilder) WithPartitionKey(partitionKey string) sdk.DataStoreBuilder {
+func (f UnsafeDataStoreBuilder) WithPartitionKey(partitionKey string) sdk.DataStoreBuilder {
 	f.partitionKey = partitionKey
 	return f
 }
 
-func (f *UnsafeDataStoreBuilder) Get() sdk.DataStore {
+func (f UnsafeDataStoreBuilder) Get() sdk.DataStore {
 	fmt.Printf("getting unsafe db for tenant id = %s and partition key = %s", f.tenantId, f.partitionKey)
 	return UnsafeDataStore{
 		client:       f.client,
@@ -35,7 +34,7 @@ func (f *UnsafeDataStoreBuilder) Get() sdk.DataStore {
 }
 
 type UnsafeDataStore struct {
-	client       runtime.ServiceClient
+	client       ServiceClient
 	sessionId    string
 	tenantId     string
 	partitionKey string
@@ -63,7 +62,7 @@ func (u UnsafeDataStore) GlobalCollection(name string) sdk.Collection {
 }
 
 type DataStore struct {
-	client    runtime.ServiceClient
+	client    ServiceClient
 	sessionId string
 }
 
@@ -85,7 +84,7 @@ func (d DataStore) GlobalCollection(name string) sdk.Collection {
 }
 
 type UnsafeCollection struct {
-	client       runtime.ServiceClient
+	client       ServiceClient
 	sessionId    string
 	tenantId     string
 	partitionKey string
@@ -105,16 +104,16 @@ func (c UnsafeCollection) InsertOneWithTTL(item interface{}, expireIn time.Durat
 		ttl = time.Now().Unix() + int64(expireIn.Seconds())
 	}
 
-	id, err := runtime.GetId(item)
+	id, err := GetId(item)
 	if err != nil {
 		fmt.Printf("failed to get id: %s\n", err.Error())
 		return err
 	}
 
-	req := runtime.UnsafePutRequest{
+	req := UnsafePutRequest{
 		TenantId:     c.tenantId,
 		PartitionKey: c.partitionKey,
-		PutRequest: runtime.PutRequest{
+		PutRequest: PutRequest{
 			Action:     "insert",
 			IsGlobal:   c.isGlobal,
 			Collection: c.name,
@@ -145,16 +144,16 @@ func (c UnsafeCollection) UpdateOneWithTTL(item interface{}, expireIn time.Durat
 		ttl = time.Now().Unix() + int64(expireIn.Seconds())
 	}
 
-	id, err := runtime.GetId(item)
+	id, err := GetId(item)
 	if err != nil {
 		fmt.Printf("failed to get id: %s\n", err.Error())
 		return err
 	}
 
-	req := runtime.UnsafePutRequest{
+	req := UnsafePutRequest{
 		TenantId:     c.tenantId,
 		PartitionKey: c.partitionKey,
-		PutRequest: runtime.PutRequest{
+		PutRequest: PutRequest{
 			Action:     "update",
 			IsGlobal:   c.isGlobal,
 			Collection: c.name,
@@ -185,16 +184,16 @@ func (c UnsafeCollection) UpsertOneWithTTL(item interface{}, expireIn time.Durat
 		ttl = time.Now().Unix() + int64(expireIn.Seconds())
 	}
 
-	id, err := runtime.GetId(item)
+	id, err := GetId(item)
 	if err != nil {
 		fmt.Printf("failed to get id: %s\n", err.Error())
 		return err
 	}
 
-	req := runtime.UnsafePutRequest{
+	req := UnsafePutRequest{
 		TenantId:     c.tenantId,
 		PartitionKey: c.partitionKey,
-		PutRequest: runtime.PutRequest{
+		PutRequest: PutRequest{
 			Action:     "upsert",
 			IsGlobal:   c.isGlobal,
 			Collection: c.name,
@@ -214,10 +213,10 @@ func (c UnsafeCollection) UpsertOneWithTTL(item interface{}, expireIn time.Durat
 }
 
 func (c UnsafeCollection) DeleteOne(key string) error {
-	req := runtime.UnsafePutRequest{
+	req := UnsafePutRequest{
 		TenantId:     c.tenantId,
 		PartitionKey: c.partitionKey,
-		PutRequest: runtime.PutRequest{
+		PutRequest: PutRequest{
 			Action:     "delete",
 			IsGlobal:   c.isGlobal,
 			Collection: c.name,
@@ -235,10 +234,10 @@ func (c UnsafeCollection) DeleteOne(key string) error {
 }
 
 func (c UnsafeCollection) GetOne(key string, ret interface{}) (bool, error) {
-	req := runtime.UnsafeQueryRequest{
+	req := UnsafeQueryRequest{
 		TenantId:     c.tenantId,
 		PartitionKey: c.partitionKey,
-		QueryRequest: runtime.QueryRequest{
+		QueryRequest: QueryRequest{
 			IsGlobal:   c.isGlobal,
 			Collection: c.name,
 			Key:        key,
@@ -258,7 +257,7 @@ func (c UnsafeCollection) GetOne(key string, ret interface{}) (bool, error) {
 		return false, nil
 	}
 
-	err = runtime.ConvertType(r, ret)
+	err = ConvertType(r, ret)
 	if err != nil {
 		fmt.Printf("failed to convert type: %s\n", err.Error())
 		return false, err
@@ -276,7 +275,7 @@ func (c UnsafeCollection) Query() sdk.Query {
 }
 
 type Collection struct {
-	client    runtime.ServiceClient
+	client    ServiceClient
 	sessionId string
 	name      string
 	isGlobal  bool
@@ -294,13 +293,13 @@ func (c Collection) InsertOneWithTTL(item interface{}, expireIn time.Duration) e
 		ttl = time.Now().Unix() + int64(expireIn.Seconds())
 	}
 
-	id, err := runtime.GetId(item)
+	id, err := GetId(item)
 	if err != nil {
 		fmt.Printf("failed to get id: %s\n", err.Error())
 		return err
 	}
 
-	req := runtime.PutRequest{
+	req := PutRequest{
 		Action:     "insert",
 		IsGlobal:   c.isGlobal,
 		Collection: c.name,
@@ -330,13 +329,13 @@ func (c Collection) UpdateOneWithTTL(item interface{}, expireIn time.Duration) e
 		ttl = time.Now().Unix() + int64(expireIn.Seconds())
 	}
 
-	id, err := runtime.GetId(item)
+	id, err := GetId(item)
 	if err != nil {
 		fmt.Printf("failed to get id: %s\n", err.Error())
 		return err
 	}
 
-	req := runtime.PutRequest{
+	req := PutRequest{
 		Action:     "update",
 		IsGlobal:   c.isGlobal,
 		Collection: c.name,
@@ -366,13 +365,13 @@ func (c Collection) UpsertOneWithTTL(item interface{}, expireIn time.Duration) e
 		ttl = time.Now().Unix() + int64(expireIn.Seconds())
 	}
 
-	id, err := runtime.GetId(item)
+	id, err := GetId(item)
 	if err != nil {
 		fmt.Printf("failed to get id: %s\n", err.Error())
 		return err
 	}
 
-	req := runtime.PutRequest{
+	req := PutRequest{
 		Action:     "upsert",
 		IsGlobal:   c.isGlobal,
 		Collection: c.name,
@@ -391,7 +390,7 @@ func (c Collection) UpsertOneWithTTL(item interface{}, expireIn time.Duration) e
 }
 
 func (c Collection) DeleteOne(key string) error {
-	req := runtime.PutRequest{
+	req := PutRequest{
 		Action:     "delete",
 		IsGlobal:   c.isGlobal,
 		Collection: c.name,
@@ -408,7 +407,7 @@ func (c Collection) DeleteOne(key string) error {
 }
 
 func (c Collection) GetOne(key string, ret interface{}) (bool, error) {
-	req := runtime.QueryRequest{
+	req := QueryRequest{
 		IsGlobal:   c.isGlobal,
 		Collection: c.name,
 		Key:        key,
@@ -427,7 +426,7 @@ func (c Collection) GetOne(key string, ret interface{}) (bool, error) {
 		return false, nil
 	}
 
-	err = runtime.ConvertType(r, ret)
+	err = ConvertType(r, ret)
 	if err != nil {
 		fmt.Printf("failed to convert type: %s\n", err.Error())
 		return false, err
@@ -442,7 +441,7 @@ func (c Collection) Query() sdk.Query {
 	}
 }
 
-func newDatabase(client runtime.ServiceClient, sessionId string) DataStore {
+func newDatabase(client ServiceClient, sessionId string) DataStore {
 	return DataStore{
 		client:    client,
 		sessionId: sessionId,

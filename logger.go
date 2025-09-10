@@ -6,17 +6,15 @@ import (
 	"time"
 )
 
-type LogLevel string
-
 const (
-	DebugLevel LogLevel = "DEBUG"
-	InfoLevel  LogLevel = "INFO"
-	WarnLevel  LogLevel = "WARN"
-	ErrorLevel LogLevel = "ERROR"
+	DebugLevel sdk.LogLevel = "DEBUG"
+	InfoLevel  sdk.LogLevel = "INFO"
+	WarnLevel  sdk.LogLevel = "WARN"
+	ErrorLevel sdk.LogLevel = "ERROR"
 )
 
 type LogMsg struct {
-	Level     LogLevel               `json:"level"`
+	Level     sdk.LogLevel           `json:"level"`
 	Section   string                 `json:"section"`
 	Tags      map[string]interface{} `json:"tags"`
 	Timestamp int64                  `json:"timestamp"`
@@ -64,34 +62,28 @@ type JsonLogger struct {
 	section string
 }
 
-func (logger *JsonLogger) log(level LogLevel) *LogEntry {
+func (logger JsonLogger) Debug() sdk.LogEntry {
+	return logger.Log(DebugLevel)
+}
+
+func (logger JsonLogger) Info() sdk.LogEntry {
+	return logger.Log(InfoLevel)
+}
+
+func (logger JsonLogger) Warn() sdk.LogEntry {
+	return logger.Log(WarnLevel)
+}
+
+func (logger JsonLogger) Error() sdk.LogEntry {
+	return logger.Log(ErrorLevel)
+}
+
+func (logger JsonLogger) Log(level sdk.LogLevel) sdk.LogEntry {
 	return &LogEntry{
 		msg: &LogMsg{
 			Level:   level,
 			Section: logger.section,
 			Tags:    make(map[string]interface{}),
 		},
-	}
-}
-
-func (logger *JsonLogger) Debug() sdk.LogEntry {
-	return logger.log(DebugLevel)
-}
-
-func (logger *JsonLogger) Info() sdk.LogEntry {
-	return logger.log(InfoLevel)
-}
-
-func (logger *JsonLogger) Warn() sdk.LogEntry {
-	return logger.log(WarnLevel)
-}
-
-func (logger *JsonLogger) Error() sdk.LogEntry {
-	return logger.log(ErrorLevel)
-}
-
-func CreateLogger(section string) sdk.Logger {
-	return &JsonLogger{
-		section: section,
 	}
 }

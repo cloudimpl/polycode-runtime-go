@@ -1,19 +1,15 @@
 package runtime
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cloudimpl/byte-os/sdk"
 	errors2 "github.com/cloudimpl/byte-os/sdk/errors"
 	"github.com/gin-gonic/gin"
 	"github.com/invopop/jsonschema"
-	"io"
 	"log"
-	"net/http"
 	"reflect"
-	"strings"
 )
 
 func ValueToServiceComplete(output any) ServiceCompleteEvent {
@@ -45,7 +41,7 @@ func ErrorToServiceComplete(err errors2.Error, stacktraceStr string) ServiceComp
 
 func ErrorToApiComplete(err errors2.Error) ApiCompleteEvent {
 	return ApiCompleteEvent{
-		Response: ApiResponse{
+		Response: sdk.ApiResponse{
 			StatusCode:      500,
 			Header:          make(map[string]string),
 			Body:            err.ToJson(),
@@ -54,7 +50,7 @@ func ErrorToApiComplete(err errors2.Error) ApiCompleteEvent {
 	}
 }
 
-func ExtractServiceDescription(serviceMap map[string]Service) ([]ServiceDescription, error) {
+func ExtractServiceDescription(serviceMap map[string]ClientService) ([]ServiceDescription, error) {
 	var services []ServiceDescription
 	for srvName, srv := range serviceMap {
 		serviceData := ServiceDescription{
@@ -83,7 +79,7 @@ func ExtractServiceDescription(serviceMap map[string]Service) ([]ServiceDescript
 	return services, nil
 }
 
-func GetMethodDescription(service Service, method string) (MethodDescription, error) {
+func GetMethodDescription(service ClientService, method string) (MethodDescription, error) {
 	description, err := service.GetDescription(method)
 	if err != nil {
 		return MethodDescription{}, err
@@ -156,41 +152,6 @@ func ConvertType(input any, output any) error {
 	}
 
 	return json.Unmarshal(in, output)
-}
-
-func ConvertToHttpRequest(ctx context.Context, apiReq ApiRequest) (*http.Request, error) {
-	// Build the URL
-	url := apiReq.Path
-	if len(apiReq.Query) > 0 {
-		queryParams := "?"
-		for key, value := range apiReq.Query {
-			queryParams += key + "=" + value + "&"
-		}
-		queryParams = strings.TrimSuffix(queryParams, "&")
-		url += queryParams
-	}
-
-	// Create a new HTTP request
-	var body io.Reader
-	if apiReq.Body != "" {
-		body = bytes.NewReader([]byte(apiReq.Body))
-	} else {
-		body = nil
-	}
-
-	println("client: create http request with workflow context")
-	req, err := http.NewRequestWithContext(ctx, apiReq.Method, url, body)
-	if err != nil {
-		return nil, err
-	}
-
-	// Add headers
-	for key, value := range apiReq.Header {
-		req.Header.Set(key, value)
-	}
-	req.Host = apiReq.Host
-
-	return req, nil
 }
 
 func GetId(item any) (string, error) {

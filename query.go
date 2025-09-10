@@ -1,9 +1,8 @@
-package context
+package runtime
 
 import (
 	"context"
 	"fmt"
-	"github.com/cloudimpl/byte-os/runtime"
 	"github.com/cloudimpl/byte-os/sdk"
 	"log"
 )
@@ -27,7 +26,7 @@ func (q Query) Limit(limit int) sdk.Query {
 }
 
 func (q Query) One(ctx context.Context, ret interface{}) (bool, error) {
-	req := runtime.QueryRequest{
+	req := QueryRequest{
 		IsGlobal:   q.collection.isGlobal,
 		Collection: q.collection.name,
 		Key:        "",
@@ -46,7 +45,7 @@ func (q Query) One(ctx context.Context, ret interface{}) (bool, error) {
 	}
 
 	e := r[0]
-	err = runtime.ConvertType(e, ret)
+	err = ConvertType(e, ret)
 	if err != nil {
 		fmt.Printf("failed to convert type: %s\n", err.Error())
 		return false, err
@@ -56,7 +55,7 @@ func (q Query) One(ctx context.Context, ret interface{}) (bool, error) {
 }
 
 func (q Query) All(ctx context.Context, ret interface{}) error {
-	req := runtime.QueryRequest{
+	req := QueryRequest{
 		IsGlobal:   q.collection.isGlobal,
 		Collection: q.collection.name,
 		Key:        "",
@@ -71,7 +70,7 @@ func (q Query) All(ctx context.Context, ret interface{}) error {
 		return err
 	}
 
-	err = runtime.ConvertType(r, ret)
+	err = ConvertType(r, ret)
 	if err != nil {
 		fmt.Printf("failed to convert type: %s\n", err.Error())
 		return err
@@ -101,10 +100,10 @@ func (q UnsafeQuery) Limit(limit int) sdk.Query {
 }
 
 func (q UnsafeQuery) One(ctx context.Context, ret interface{}) (bool, error) {
-	req := runtime.UnsafeQueryRequest{
+	req := UnsafeQueryRequest{
 		TenantId:     q.tenantId,
 		PartitionKey: q.partitionKey,
-		QueryRequest: runtime.QueryRequest{
+		QueryRequest: QueryRequest{
 			IsGlobal:   q.collection.isGlobal,
 			Collection: q.collection.name,
 			Key:        "",
@@ -124,7 +123,7 @@ func (q UnsafeQuery) One(ctx context.Context, ret interface{}) (bool, error) {
 	}
 
 	e := r[0]
-	err = runtime.ConvertType(e, ret)
+	err = ConvertType(e, ret)
 	if err != nil {
 		fmt.Printf("failed to convert type: %s\n", err.Error())
 		return false, err
@@ -134,10 +133,10 @@ func (q UnsafeQuery) One(ctx context.Context, ret interface{}) (bool, error) {
 }
 
 func (q UnsafeQuery) All(ctx context.Context, ret interface{}) error {
-	req := runtime.UnsafeQueryRequest{
+	req := UnsafeQueryRequest{
 		TenantId:     q.tenantId,
 		PartitionKey: q.partitionKey,
-		QueryRequest: runtime.QueryRequest{
+		QueryRequest: QueryRequest{
 			IsGlobal:   q.collection.isGlobal,
 			Collection: q.collection.name,
 			Key:        "",
@@ -153,7 +152,7 @@ func (q UnsafeQuery) All(ctx context.Context, ret interface{}) error {
 		return err
 	}
 
-	err = runtime.ConvertType(r, ret)
+	err = ConvertType(r, ret)
 	if err != nil {
 		fmt.Printf("failed to convert type: %s\n", err.Error())
 		return err

@@ -1,9 +1,8 @@
-package context
+package runtime
 
 import (
 	"context"
 	"fmt"
-	"github.com/cloudimpl/byte-os/runtime"
 	"github.com/cloudimpl/byte-os/sdk"
 )
 
@@ -12,16 +11,16 @@ type AgentBuilder struct {
 	sessionId     string
 	envId         string
 	agent         string
-	serviceClient runtime.ServiceClient
+	serviceClient ServiceClient
 	tenantId      string
 }
 
-func (r *AgentBuilder) WithTenantId(tenantId string) *AgentBuilder {
+func (r AgentBuilder) WithTenantId(tenantId string) sdk.AgentBuilder {
 	r.tenantId = tenantId
 	return r
 }
 
-func (r *AgentBuilder) Get() Agent {
+func (r AgentBuilder) Get() sdk.Agent {
 	return Agent{
 		ctx:           r.ctx,
 		sessionId:     r.sessionId,
@@ -37,12 +36,12 @@ type Agent struct {
 	sessionId     string
 	envId         string
 	agent         string
-	serviceClient runtime.ServiceClient
+	serviceClient ServiceClient
 	tenantId      string
 }
 
-func (r Agent) Call(options sdk.TaskOptions, input sdk.AgentInput) Response {
-	req := runtime.ExecServiceRequest{
+func (r Agent) Call(options sdk.TaskOptions, input sdk.AgentInput) sdk.Response {
+	req := ExecServiceRequest{
 		EnvId:        r.envId,
 		Service:      "agent-service",
 		TenantId:     r.tenantId,
@@ -50,7 +49,7 @@ func (r Agent) Call(options sdk.TaskOptions, input sdk.AgentInput) Response {
 		Method:       "CallAgent",
 		Options:      options,
 		Headers: map[string]string{
-			runtime.AgentNameHeader: r.agent,
+			AgentNameHeader: r.agent,
 		},
 		Input: input,
 	}
@@ -61,7 +60,7 @@ func (r Agent) Call(options sdk.TaskOptions, input sdk.AgentInput) Response {
 		return Response{
 			output:  nil,
 			isError: true,
-			error:   runtime.ErrTaskExecError.Wrap(err),
+			error:   ErrTaskExecError.Wrap(err),
 		}
 	}
 

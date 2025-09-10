@@ -1,7 +1,6 @@
-package context
+package runtime
 
 import (
-	"github.com/cloudimpl/byte-os/runtime"
 	"github.com/cloudimpl/byte-os/sdk/errors"
 )
 
@@ -24,7 +23,7 @@ func (r Response) Get(ret any) error {
 		return r.error
 	}
 
-	return runtime.ConvertType(r.output, ret)
+	return ConvertType(r.output, ret)
 }
 
 func (r Response) GetAny() (any, error) {
