@@ -1,22 +1,452 @@
 package context
 
-import "time"
+import (
+	"fmt"
+	"github.com/cloudimpl/byte-os/runtime"
+	"github.com/cloudimpl/byte-os/sdk"
+	"time"
+)
 
-type Collection interface {
-	InsertOne(item interface{}) error
-	InsertOneWithTTL(item interface{}, expireIn time.Duration) error
-	UpdateOne(item interface{}) error
-	UpdateOneWithTTL(item interface{}, expireIn time.Duration) error
-	UpsertOne(item interface{}) error
-	UpsertOneWithTTL(item interface{}, expireIn time.Duration) error
-	DeleteOne(key string) error
-	GetOne(key string, ret interface{}) (bool, error)
-	Query() Query
+type UnsafeDataStoreBuilder struct {
+	client       runtime.ServiceClient
+	sessionId    string
+	tenantId     string
+	partitionKey string
 }
 
-type DataStore interface {
-	Collection(name string) Collection
-	GlobalCollection(name string) Collection
+func (f *UnsafeDataStoreBuilder) WithTenantId(tenantId string) sdk.DataStoreBuilder {
+	f.tenantId = tenantId
+	return f
+}
+
+func (f *UnsafeDataStoreBuilder) WithPartitionKey(partitionKey string) sdk.DataStoreBuilder {
+	f.partitionKey = partitionKey
+	return f
+}
+
+func (f *UnsafeDataStoreBuilder) Get() sdk.DataStore {
+	fmt.Printf("getting unsafe db for tenant id = %s and partition key = %s", f.tenantId, f.partitionKey)
+	return UnsafeDataStore{
+		client:       f.client,
+		sessionId:    f.sessionId,
+		tenantId:     f.tenantId,
+		partitionKey: f.partitionKey,
+	}
+}
+
+type UnsafeDataStore struct {
+	client       runtime.ServiceClient
+	sessionId    string
+	tenantId     string
+	partitionKey string
+}
+
+func (u UnsafeDataStore) Collection(name string) sdk.Collection {
+	return UnsafeCollection{
+		client:       u.client,
+		sessionId:    u.sessionId,
+		tenantId:     u.tenantId,
+		partitionKey: u.partitionKey,
+		name:         name,
+	}
+}
+
+func (u UnsafeDataStore) GlobalCollection(name string) sdk.Collection {
+	return UnsafeCollection{
+		client:       u.client,
+		sessionId:    u.sessionId,
+		tenantId:     u.tenantId,
+		partitionKey: u.partitionKey,
+		name:         name,
+		isGlobal:     true,
+	}
+}
+
+type DataStore struct {
+	client    runtime.ServiceClient
+	sessionId string
+}
+
+func (d DataStore) Collection(name string) sdk.Collection {
+	return Collection{
+		client:    d.client,
+		sessionId: d.sessionId,
+		name:      name,
+	}
+}
+
+func (d DataStore) GlobalCollection(name string) sdk.Collection {
+	return Collection{
+		client:    d.client,
+		sessionId: d.sessionId,
+		name:      name,
+		isGlobal:  true,
+	}
+}
+
+type UnsafeCollection struct {
+	client       runtime.ServiceClient
+	sessionId    string
+	tenantId     string
+	partitionKey string
+	name         string
+	isGlobal     bool
+}
+
+func (c UnsafeCollection) InsertOne(item interface{}) error {
+	return c.InsertOneWithTTL(item, -1)
+}
+
+func (c UnsafeCollection) InsertOneWithTTL(item interface{}, expireIn time.Duration) error {
+	var ttl int64
+	if expireIn == -1 {
+		ttl = -1
+	} else {
+		ttl = time.Now().Unix() + int64(expireIn.Seconds())
+	}
+
+	id, err := runtime.GetId(item)
+	if err != nil {
+		fmt.Printf("failed to get id: %s\n", err.Error())
+		return err
+	}
+
+	req := runtime.UnsafePutRequest{
+		TenantId:     c.tenantId,
+		PartitionKey: c.partitionKey,
+		PutRequest: runtime.PutRequest{
+			Action:     "insert",
+			IsGlobal:   c.isGlobal,
+			Collection: c.name,
+			Key:        id,
+			Item:       item,
+			TTL:        ttl,
+		},
+	}
+
+	err = c.client.UnsafePutItem(c.sessionId, req)
+	if err != nil {
+		fmt.Printf("failed to put item: %s\n", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (c UnsafeCollection) UpdateOne(item interface{}) error {
+	return c.UpdateOneWithTTL(item, -1)
+}
+
+func (c UnsafeCollection) UpdateOneWithTTL(item interface{}, expireIn time.Duration) error {
+	var ttl int64
+	if expireIn == -1 {
+		ttl = -1
+	} else {
+		ttl = time.Now().Unix() + int64(expireIn.Seconds())
+	}
+
+	id, err := runtime.GetId(item)
+	if err != nil {
+		fmt.Printf("failed to get id: %s\n", err.Error())
+		return err
+	}
+
+	req := runtime.UnsafePutRequest{
+		TenantId:     c.tenantId,
+		PartitionKey: c.partitionKey,
+		PutRequest: runtime.PutRequest{
+			Action:     "update",
+			IsGlobal:   c.isGlobal,
+			Collection: c.name,
+			Key:        id,
+			Item:       item,
+			TTL:        ttl,
+		},
+	}
+
+	err = c.client.UnsafePutItem(c.sessionId, req)
+	if err != nil {
+		fmt.Printf("failed to put item: %s\n", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (c UnsafeCollection) UpsertOne(item interface{}) error {
+	return c.UpsertOneWithTTL(item, -1)
+}
+
+func (c UnsafeCollection) UpsertOneWithTTL(item interface{}, expireIn time.Duration) error {
+	var ttl int64
+	if expireIn == -1 {
+		ttl = -1
+	} else {
+		ttl = time.Now().Unix() + int64(expireIn.Seconds())
+	}
+
+	id, err := runtime.GetId(item)
+	if err != nil {
+		fmt.Printf("failed to get id: %s\n", err.Error())
+		return err
+	}
+
+	req := runtime.UnsafePutRequest{
+		TenantId:     c.tenantId,
+		PartitionKey: c.partitionKey,
+		PutRequest: runtime.PutRequest{
+			Action:     "upsert",
+			IsGlobal:   c.isGlobal,
+			Collection: c.name,
+			Key:        id,
+			Item:       item,
+			TTL:        ttl,
+		},
+	}
+
+	err = c.client.UnsafePutItem(c.sessionId, req)
+	if err != nil {
+		fmt.Printf("failed to put item: %s\n", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (c UnsafeCollection) DeleteOne(key string) error {
+	req := runtime.UnsafePutRequest{
+		TenantId:     c.tenantId,
+		PartitionKey: c.partitionKey,
+		PutRequest: runtime.PutRequest{
+			Action:     "delete",
+			IsGlobal:   c.isGlobal,
+			Collection: c.name,
+			Key:        key,
+		},
+	}
+
+	err := c.client.UnsafePutItem(c.sessionId, req)
+	if err != nil {
+		fmt.Printf("failed to put item: %s\n", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (c UnsafeCollection) GetOne(key string, ret interface{}) (bool, error) {
+	req := runtime.UnsafeQueryRequest{
+		TenantId:     c.tenantId,
+		PartitionKey: c.partitionKey,
+		QueryRequest: runtime.QueryRequest{
+			IsGlobal:   c.isGlobal,
+			Collection: c.name,
+			Key:        key,
+			Filter:     "",
+			Args:       nil,
+		},
+	}
+
+	r, err := c.client.UnsafeGetItem(c.sessionId, req)
+	if err != nil {
+		fmt.Printf("failed to get item: %s\n", err.Error())
+		return false, err
+	}
+
+	if r == nil {
+		println("item not found")
+		return false, nil
+	}
+
+	err = runtime.ConvertType(r, ret)
+	if err != nil {
+		fmt.Printf("failed to convert type: %s\n", err.Error())
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (c UnsafeCollection) Query() sdk.Query {
+	return UnsafeQuery{
+		tenantId:     c.tenantId,
+		partitionKey: c.partitionKey,
+		collection:   &c,
+	}
+}
+
+type Collection struct {
+	client    runtime.ServiceClient
+	sessionId string
+	name      string
+	isGlobal  bool
+}
+
+func (c Collection) InsertOne(item interface{}) error {
+	return c.InsertOneWithTTL(item, -1)
+}
+
+func (c Collection) InsertOneWithTTL(item interface{}, expireIn time.Duration) error {
+	var ttl int64
+	if expireIn == -1 {
+		ttl = -1
+	} else {
+		ttl = time.Now().Unix() + int64(expireIn.Seconds())
+	}
+
+	id, err := runtime.GetId(item)
+	if err != nil {
+		fmt.Printf("failed to get id: %s\n", err.Error())
+		return err
+	}
+
+	req := runtime.PutRequest{
+		Action:     "insert",
+		IsGlobal:   c.isGlobal,
+		Collection: c.name,
+		Key:        id,
+		Item:       item,
+		TTL:        ttl,
+	}
+
+	err = c.client.PutItem(c.sessionId, req)
+	if err != nil {
+		fmt.Printf("failed to put item: %s\n", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (c Collection) UpdateOne(item interface{}) error {
+	return c.UpdateOneWithTTL(item, -1)
+}
+
+func (c Collection) UpdateOneWithTTL(item interface{}, expireIn time.Duration) error {
+	var ttl int64
+	if expireIn == -1 {
+		ttl = -1
+	} else {
+		ttl = time.Now().Unix() + int64(expireIn.Seconds())
+	}
+
+	id, err := runtime.GetId(item)
+	if err != nil {
+		fmt.Printf("failed to get id: %s\n", err.Error())
+		return err
+	}
+
+	req := runtime.PutRequest{
+		Action:     "update",
+		IsGlobal:   c.isGlobal,
+		Collection: c.name,
+		Key:        id,
+		Item:       item,
+		TTL:        ttl,
+	}
+
+	err = c.client.PutItem(c.sessionId, req)
+	if err != nil {
+		fmt.Printf("failed to put item: %s\n", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (c Collection) UpsertOne(item interface{}) error {
+	return c.UpsertOneWithTTL(item, -1)
+}
+
+func (c Collection) UpsertOneWithTTL(item interface{}, expireIn time.Duration) error {
+	var ttl int64
+	if expireIn == -1 {
+		ttl = -1
+	} else {
+		ttl = time.Now().Unix() + int64(expireIn.Seconds())
+	}
+
+	id, err := runtime.GetId(item)
+	if err != nil {
+		fmt.Printf("failed to get id: %s\n", err.Error())
+		return err
+	}
+
+	req := runtime.PutRequest{
+		Action:     "upsert",
+		IsGlobal:   c.isGlobal,
+		Collection: c.name,
+		Key:        id,
+		Item:       item,
+		TTL:        ttl,
+	}
+
+	err = c.client.PutItem(c.sessionId, req)
+	if err != nil {
+		fmt.Printf("failed to put item: %s\n", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (c Collection) DeleteOne(key string) error {
+	req := runtime.PutRequest{
+		Action:     "delete",
+		IsGlobal:   c.isGlobal,
+		Collection: c.name,
+		Key:        key,
+	}
+
+	err := c.client.PutItem(c.sessionId, req)
+	if err != nil {
+		fmt.Printf("failed to put item: %s\n", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (c Collection) GetOne(key string, ret interface{}) (bool, error) {
+	req := runtime.QueryRequest{
+		IsGlobal:   c.isGlobal,
+		Collection: c.name,
+		Key:        key,
+		Filter:     "",
+		Args:       nil,
+	}
+
+	r, err := c.client.GetItem(c.sessionId, req)
+	if err != nil {
+		fmt.Printf("failed to get item: %s\n", err.Error())
+		return false, err
+	}
+
+	if r == nil {
+		println("item not found")
+		return false, nil
+	}
+
+	err = runtime.ConvertType(r, ret)
+	if err != nil {
+		fmt.Printf("failed to convert type: %s\n", err.Error())
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (c Collection) Query() sdk.Query {
+	return Query{
+		collection: &c,
+	}
+}
+
+func newDatabase(client runtime.ServiceClient, sessionId string) DataStore {
+	return DataStore{
+		client:    client,
+		sessionId: sessionId,
+	}
 }
 
 type DataStoreBuilder interface {
