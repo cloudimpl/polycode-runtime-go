@@ -5,222 +5,82 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cloudimpl/byte-os/runtime"
+	"github.com/cloudimpl/byte-os/sdk"
 )
 
-type FileStore struct {
+type Folder struct {
 	client    runtime.ServiceClient
 	sessionId string
+	parent    sdk.Folder
+	name      string
 }
 
-func (d FileStore) NewFolder(name string) (Folder, error) {
+func (f Folder) Parent() sdk.Folder {
+	return f.parent
+}
+
+func (f Folder) Name() string {
+	return f.name
+}
+
+func (f Folder) Path() string {
+	return f.parent.Path() + "/" + f.name
+}
+
+func (f Folder) Folder(name string) sdk.Folder {
+	return Folder{
+		client:    f.client,
+		sessionId: f.sessionId,
+		parent:    f,
+		name:      name,
+	}
+}
+
+func (f Folder) CreateNewFolder(name string) (sdk.Folder, error) {
 	req := runtime.CreateFolderRequest{
 		Folder: name,
 	}
 
-	err := d.client.CreateFolder(d.sessionId, req)
+	err := f.client.CreateFolder(f.sessionId, req)
 	if err != nil {
 		fmt.Printf("failed to create folder: %s\n", err.Error())
 		return Folder{}, err
 	}
 
-	return d.Folder(name), nil
+	return f.Folder(name), nil
 }
 
-func (d FileStore) Get(path string) (bool, []byte, error) {
-	req := runtime.GetFileRequest{
-		Key: path,
-	}
-
-	res, err := d.client.GetFile(d.sessionId, req)
-	if err != nil {
-		fmt.Printf("failed to get file: %s\n", err.Error())
-		return false, nil, err
-	}
-
-	if res.Content == "" {
-		return false, nil, nil
-	}
-
-	// Decode the base64 data
-	data, err := base64.StdEncoding.DecodeString(res.Content)
-	if err != nil {
-		fmt.Printf("failed to decode base64: %s\n", err.Error())
-		return true, nil, err
-	}
-
-	return true, data, nil
-}
-
-func (d FileStore) GetDownloadLink(path string) (string, error) {
-	req := runtime.GetFileRequest{
-		Key: path,
-	}
-
-	res, err := d.client.GetFileDownloadLink(d.sessionId, req)
-	if err != nil {
-		fmt.Printf("failed to get file link: %s\n", err.Error())
-		return "", err
-	}
-
-	if res.Link == "" {
-		return "", errors.New("empty link")
-	}
-
-	return res.Link, nil
-}
-
-func (d FileStore) Save(path string, data []byte) error {
-	// Encode the data as base64
-	base64Data := base64.StdEncoding.EncodeToString(data)
-	req := runtime.PutFileRequest{
-		Key:      path,
-		TempFile: false,
-		Content:  base64Data,
-	}
-
-	err := d.client.PutFile(d.sessionId, req)
-	if err != nil {
-		fmt.Printf("failed to put file: %s\n", err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (d FileStore) SaveTemp(path string, data []byte) error {
-	// Encode the data as base64
-	base64Data := base64.StdEncoding.EncodeToString(data)
-	req := runtime.PutFileRequest{
-		Key:      path,
-		TempFile: true,
-		Content:  base64Data,
-	}
-
-	err := d.client.PutFile(d.sessionId, req)
-	if err != nil {
-		fmt.Printf("failed to put file: %s\n", err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (d FileStore) Upload(path string, filePath string) error {
-	req := runtime.PutFileRequest{
-		Key:      path,
-		TempFile: false,
-		FilePath: filePath,
-	}
-
-	err := d.client.PutFile(d.sessionId, req)
-	if err != nil {
-		fmt.Printf("failed to put file: %s\n", err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (d FileStore) UploadTemp(path string, filePath string) error {
-	req := runtime.PutFileRequest{
-		Key:      path,
-		TempFile: true,
-		FilePath: filePath,
-	}
-
-	err := d.client.PutFile(d.sessionId, req)
-	if err != nil {
-		fmt.Printf("failed to put file: %s\n", err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (d FileStore) GetUploadLink(path string) (string, error) {
-	req := runtime.GetUploadLinkRequest{
-		Key:      path,
-		TempFile: false,
-	}
-
-	res, err := d.client.GetFileUploadLink(d.sessionId, req)
-	if err != nil {
-		fmt.Printf("failed to get file link: %s\n", err.Error())
-		return "", err
-	}
-
-	if res.Link == "" {
-		return "", errors.New("empty link")
-	}
-
-	return res.Link, nil
-}
-
-func (d FileStore) GetTempUploadLink(path string) (string, error) {
-	req := runtime.GetUploadLinkRequest{
-		Key:      path,
-		TempFile: true,
-	}
-
-	res, err := d.client.GetFileUploadLink(d.sessionId, req)
-	if err != nil {
-		fmt.Printf("failed to get file link: %s\n", err.Error())
-		return "", err
-	}
-
-	if res.Link == "" {
-		return "", errors.New("empty link")
-	}
-
-	return res.Link, nil
-}
-
-func (d FileStore) Delete(path string) error {
-	req := runtime.DeleteFileRequest{
-		Key: path,
-	}
-
-	err := d.client.DeleteFile(d.sessionId, req)
-	if err != nil {
-		fmt.Printf("failed to delete file: %s\n", err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (d FileStore) Move(oldPath string, newPath string) error {
-	req := runtime.RenameFileRequest{
-		OldKey: oldPath,
-		NewKey: newPath,
-	}
-
-	err := d.client.RenameFile(d.sessionId, req)
-	if err != nil {
-		fmt.Printf("failed to rename file: %s\n", err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (d FileStore) Folder(name string) Folder {
-	return Folder{
-		client:    d.client,
-		sessionId: d.sessionId,
+func (f Folder) File(name string) sdk.File {
+	return File{
+		client:    f.client,
+		sessionId: f.sessionId,
+		parent:    f,
 		name:      name,
 	}
 }
 
-type Folder struct {
+type File struct {
 	client    runtime.ServiceClient
 	sessionId string
+	parent    sdk.Folder
 	name      string
 }
 
-func (f Folder) Load(name string) (bool, []byte, error) {
+func (f File) Parent() sdk.Folder {
+	return f.parent
+}
+
+func (f File) Name() string {
+	return f.name
+}
+
+func (f File) Path() string {
+	return f.parent.Path() + "/" + f.name
+}
+
+func (f File) Get() (bool, []byte, error) {
 	req := runtime.GetFileRequest{
-		Key: f.name + "/" + name,
+		Key: f.Path(),
 	}
 
 	res, err := f.client.GetFile(f.sessionId, req)
@@ -243,11 +103,34 @@ func (f Folder) Load(name string) (bool, []byte, error) {
 	return true, data, nil
 }
 
-func (f Folder) Save(name string, data []byte) error {
+func (f File) Download(filePath string) error {
+	// new method added with v2
+	panic("implement me")
+}
+
+func (f File) GetDownloadLink() (string, error) {
+	req := runtime.GetFileRequest{
+		Key: f.Path(),
+	}
+
+	res, err := f.client.GetFileDownloadLink(f.sessionId, req)
+	if err != nil {
+		fmt.Printf("failed to get file link: %s\n", err.Error())
+		return "", err
+	}
+
+	if res.Link == "" {
+		return "", errors.New("empty link")
+	}
+
+	return res.Link, nil
+}
+
+func (f File) Save(data []byte) error {
 	// Encode the data as base64
 	base64Data := base64.StdEncoding.EncodeToString(data)
 	req := runtime.PutFileRequest{
-		Key:      f.name + "/" + name,
+		Key:      f.Path(),
 		TempFile: false,
 		Content:  base64Data,
 	}
@@ -261,59 +144,77 @@ func (f Folder) Save(name string, data []byte) error {
 	return nil
 }
 
-func (f Folder) SaveTemp(name string, data []byte) error {
-	// Encode the data as base64
-	base64Data := base64.StdEncoding.EncodeToString(data)
-	req := runtime.PutFileRequest{
-		Key:      f.name + "/" + name,
-		TempFile: true,
-		Content:  base64Data,
-	}
-
-	err := f.client.PutFile(f.sessionId, req)
-	if err != nil {
-		fmt.Printf("failed to put file: %s\n", err.Error())
-		return err
-	}
-
-	return nil
+func (f File) Upload(filePath string) error {
+	// new method added with v2
+	panic("implement me")
 }
 
-func (f Folder) Upload(name string, filePath string) error {
-	req := runtime.PutFileRequest{
-		Key:      f.name + "/" + name,
+func (f File) GetUploadLink() (string, error) {
+	req := runtime.GetUploadLinkRequest{
+		Key:      f.Path(),
 		TempFile: false,
-		FilePath: filePath,
 	}
 
-	err := f.client.PutFile(f.sessionId, req)
+	res, err := f.client.GetFileUploadLink(f.sessionId, req)
 	if err != nil {
-		fmt.Printf("failed to put file: %s\n", err.Error())
+		fmt.Printf("failed to get file link: %s\n", err.Error())
+		return "", err
+	}
+
+	if res.Link == "" {
+		return "", errors.New("empty link")
+	}
+
+	return res.Link, nil
+}
+
+func (f File) Delete() error {
+	req := runtime.DeleteFileRequest{
+		Key: f.Path(),
+	}
+
+	err := f.client.DeleteFile(f.sessionId, req)
+	if err != nil {
+		fmt.Printf("failed to delete file: %s\n", err.Error())
 		return err
 	}
 
 	return nil
 }
 
-func (f Folder) UploadTemp(name string, filePath string) error {
-	req := runtime.PutFileRequest{
-		Key:      f.name + "/" + name,
-		TempFile: true,
-		FilePath: filePath,
+func (f File) Rename(newName string) error {
+	req := runtime.RenameFileRequest{
+		OldKey: f.Path(),
+		NewKey: f.parent.Path() + "/" + newName,
 	}
 
-	err := f.client.PutFile(f.sessionId, req)
+	err := f.client.RenameFile(f.sessionId, req)
 	if err != nil {
-		fmt.Printf("failed to put file: %s\n", err.Error())
+		fmt.Printf("failed to rename file: %s\n", err.Error())
 		return err
 	}
 
+	f.name = newName
 	return nil
 }
 
-func newFileStore(client runtime.ServiceClient, sessionId string) FileStore {
-	return FileStore{
-		client:    client,
-		sessionId: sessionId,
+func (f File) MoveTo(dest sdk.Folder) error {
+	req := runtime.RenameFileRequest{
+		OldKey: f.Path(),
+		NewKey: dest.Path() + "/" + f.name,
 	}
+
+	err := f.client.RenameFile(f.sessionId, req)
+	if err != nil {
+		fmt.Printf("failed to rename file: %s\n", err.Error())
+		return err
+	}
+
+	f.parent = dest
+	return nil
+}
+
+func (f File) CopyTo(dest sdk.Folder) error {
+	// new method added with v2
+	panic("implement me")
 }
