@@ -5,28 +5,21 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cloudimpl/byte-os/sdk"
+	"github.com/cloudimpl/byte-os/sdk/runtime"
 	"github.com/gin-gonic/gin"
 	"log"
 	"runtime/debug"
 )
 
-type ClientRuntime interface {
-	RegisterService(service Service) error
-	RegisterApi(engine *gin.Engine) error
-	Start() error
-	RunService(ctx context.Context, event ServiceStartEvent) (evt ServiceCompleteEvent, err error)
-	RunApi(ctx context.Context, event ApiStartEvent) (evt ApiCompleteEvent, err error)
-}
-
 type ClientRuntimeImpl struct {
 	env         ClientEnv
-	serviceMap  map[string]ClientService
+	serviceMap  map[string]runtime.Service
 	httpHandler *gin.Engine
 	client      ServiceClient
 	validator   sdk.Validator
 }
 
-func (c ClientRuntimeImpl) getService(serviceName string) (ClientService, error) {
+func (c ClientRuntimeImpl) getService(serviceName string) (runtime.Service, error) {
 	service := c.serviceMap[serviceName]
 	if service == nil {
 		return nil, fmt.Errorf("client: service %s not registered", serviceName)
@@ -41,7 +34,7 @@ func (c ClientRuntimeImpl) getApi() (*gin.Engine, error) {
 	return c.httpHandler, nil
 }
 
-func (c ClientRuntimeImpl) RegisterService(service ClientService) error {
+func (c ClientRuntimeImpl) RegisterService(service runtime.Service) error {
 	log.Println("client: register service ", service.GetName())
 
 	if c.serviceMap[service.GetName()] != nil {
@@ -52,12 +45,12 @@ func (c ClientRuntimeImpl) RegisterService(service ClientService) error {
 	}
 }
 
-func (c ClientRuntimeImpl) RegisterApi(engine *gin.Engine) error {
+func (c ClientRuntimeImpl) RegisterApi(httpHandler *gin.Engine) error {
 	if c.httpHandler != nil {
 		return errors.New("client: api already registered")
 	}
 
-	c.httpHandler = engine
+	c.httpHandler = httpHandler
 	return nil
 }
 
@@ -183,7 +176,7 @@ func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt
 				if errors.Is(recovered, ErrTaskStopped) {
 					fmt.Printf("api stopped %s %s", event.Request.Method, event.Request.Path)
 					evt = ApiCompleteEvent{
-						Response: ApiResponse{
+						Response: sdk.ApiResponse{
 							StatusCode:      202,
 							Header:          make(map[string]string),
 							Body:            "",
@@ -196,7 +189,7 @@ func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt
 					fmt.Printf("recovered %v", r)
 					err2 := ErrInternal.Wrap(recovered)
 					evt = ApiCompleteEvent{
-						Response: ApiResponse{
+						Response: sdk.ApiResponse{
 							StatusCode:      500,
 							Header:          make(map[string]string),
 							Body:            err2.ToJson(),

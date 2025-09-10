@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cloudimpl/byte-os/sdk"
 	errors2 "github.com/cloudimpl/byte-os/sdk/errors"
+	"github.com/cloudimpl/byte-os/sdk/runtime"
 	"github.com/gin-gonic/gin"
 	"github.com/invopop/jsonschema"
 	"log"
@@ -50,7 +51,7 @@ func ErrorToApiComplete(err errors2.Error) ApiCompleteEvent {
 	}
 }
 
-func ExtractServiceDescription(serviceMap map[string]ClientService) ([]ServiceDescription, error) {
+func ExtractServiceDescription(serviceMap map[string]runtime.Service) ([]ServiceDescription, error) {
 	var services []ServiceDescription
 	for srvName, srv := range serviceMap {
 		serviceData := ServiceDescription{
@@ -79,7 +80,7 @@ func ExtractServiceDescription(serviceMap map[string]ClientService) ([]ServiceDe
 	return services, nil
 }
 
-func GetMethodDescription(service ClientService, method string) (MethodDescription, error) {
+func GetMethodDescription(service runtime.Service, method string) (MethodDescription, error) {
 	description, err := service.GetDescription(method)
 	if err != nil {
 		return MethodDescription{}, err
