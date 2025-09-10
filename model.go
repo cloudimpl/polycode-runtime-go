@@ -36,35 +36,17 @@ type ApiStartEvent struct {
 	SessionId   string                 `json:"sessionId"`
 	Meta        sdk.HandlerContextMeta `json:"meta"`
 	AuthContext sdk.AuthContext        `json:"authContext"`
-	Request     ApiRequest             `json:"request"`
+	Request     sdk.ApiRequest         `json:"request"`
 }
 
 type ApiCompleteEvent struct {
-	Path     string      `json:"path"`
-	Response ApiResponse `json:"response"`
-	Logs     []LogMsg    `json:"logs"`
+	Path     string          `json:"path"`
+	Response sdk.ApiResponse `json:"response"`
+	Logs     []LogMsg        `json:"logs"`
 }
 
 type ErrorEvent struct {
 	Error errors.Error `json:"error"`
-}
-
-type ApiRequest struct {
-	Id              string            `json:"id"`
-	Host            string            `json:"host"`
-	Method          string            `json:"method"`
-	Path            string            `json:"path"`
-	Query           map[string]string `json:"query"`
-	Header          map[string]string `json:"header"`
-	Body            string            `json:"body"`
-	IsBase64Encoded bool              `json:"isBase64Encoded"`
-}
-
-type ApiResponse struct {
-	StatusCode      int               `json:"statusCode"`
-	Header          map[string]string `json:"header"`
-	Body            string            `json:"body"`
-	IsBase64Encoded bool              `json:"isBase64Encoded"`
 }
 
 type RouteData struct {

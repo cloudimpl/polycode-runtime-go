@@ -8,4 +8,5 @@ var ErrSidecarClientFailed = errors.DefineError("polycode.client.runtime", 3, "s
 var ErrServiceExecError = errors.DefineError("polycode.client", 4, "service exec error")
 var ErrApiExecError = errors.DefineError("polycode.client", 5, "api exec error")
 var ErrBadRequest = errors.DefineError("polycode.client", 6, "bad request")
+var ErrTaskExecError = errors.DefineError("polycode.client", 7, "task execution error")
 var ErrTaskStopped = &ErrPanic
