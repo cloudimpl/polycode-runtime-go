@@ -2,7 +2,64 @@ package context
 
 import (
 	"context"
+	"github.com/cloudimpl/byte-os/runtime"
+	"github.com/cloudimpl/byte-os/sdk"
+	"time"
 )
+
+type Context struct {
+	ctx        context.Context
+	sessionId  string
+	client     runtime.ServiceClient
+	meta       sdk.HandlerContextMeta
+	callerMeta sdk.CallerContextMeta
+	authCtx    sdk.AuthContext
+}
+
+func (c Context) Deadline() (deadline time.Time, ok bool) {
+	return c.ctx.Deadline()
+}
+
+func (c Context) Done() <-chan struct{} {
+	return c.ctx.Done()
+}
+
+func (c Context) Err() error {
+	return c.ctx.Err()
+}
+
+func (c Context) Value(key any) any {
+	return c.ctx.Value(key)
+}
+
+func (c Context) Meta() sdk.HandlerContextMeta {
+	return c.meta
+}
+
+func (c Context) AuthContext() sdk.AuthContext {
+	return c.authCtx
+}
+
+func (c Context) Logger() sdk.Logger {
+	return JsonLogger{
+		ctx: c,
+	}
+}
+
+func (c Context) UnsafeDb() sdk.DataStoreBuilder {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c Context) FileStore() sdk.Folder {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c Context) TempFileStore() sdk.Folder {
+	//TODO implement me
+	panic("implement me")
+}
 
 type BaseContext interface {
 	context.Context
