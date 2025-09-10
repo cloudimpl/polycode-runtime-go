@@ -81,7 +81,7 @@ type ExecApiRequest struct {
 	Path          string          `json:"path"`
 	Options       sdk.TaskOptions `json:"options"`
 	FireAndForget bool            `json:"fireAndForget"`
-	Request       ApiRequest      `json:"request"`
+	Request       sdk.ApiRequest  `json:"request"`
 }
 
 type ExecApiExtendedRequest struct {
@@ -90,10 +90,10 @@ type ExecApiExtendedRequest struct {
 }
 
 type ExecApiResponse struct {
-	IsAsync  bool         `json:"isAsync"`
-	Response ApiResponse  `json:"response"`
-	IsError  bool         `json:"isError"`
-	Error    errors.Error `json:"error"`
+	IsAsync  bool            `json:"isAsync"`
+	Response sdk.ApiResponse `json:"response"`
+	IsError  bool            `json:"isError"`
+	Error    errors.Error    `json:"error"`
 }
 
 type ExecFuncRequest struct {
