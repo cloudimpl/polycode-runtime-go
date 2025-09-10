@@ -205,7 +205,7 @@ func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt
 				fmt.Printf("recoverted %v", r)
 				err2 := ErrInternal.Wrap(fmt.Errorf(errorStr))
 				evt = ApiCompleteEvent{
-					Response: ApiResponse{
+					Response: sdk.ApiResponse{
 						StatusCode:      500,
 						Header:          make(map[string]string),
 						Body:            err2.ToJson(),
@@ -222,16 +222,12 @@ func (c ClientRuntimeImpl) RunApi(ctx context.Context, event ApiStartEvent) (evt
 		return ErrorToApiComplete(err2), nil
 	}
 
-	ctxImpl := &ContextImpl{
-		ctx:           ctx,
-		sessionId:     event.SessionId,
-		dataStore:     newDatabase(serviceClient, event.SessionId),
-		fileStore:     newFileStore(serviceClient, event.SessionId),
-		config:        AppConfig{},
-		serviceClient: serviceClient,
-		logger:        taskLogger,
-		meta:          event.Meta,
-		authCtx:       event.AuthContext,
+	ctxImpl := &Context{
+		ctx:       ctx,
+		sessionId: event.SessionId,
+		client:    c.client,
+		meta:      event.Meta,
+		authCtx:   event.AuthContext,
 	}
 
 	newCtx := context.WithValue(ctx, "polycode.context", ctxImpl)
