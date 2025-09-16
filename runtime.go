@@ -54,6 +54,15 @@ func (c ClientRuntime) RegisterApi(httpHandler *gin.Engine) error {
 	return nil
 }
 
+func (c ClientRuntime) RegisterValidator(validator polycode.Validator) error {
+	if c.httpHandler != nil {
+		return errors.New("client: validator already registered")
+	}
+
+	c.validator = validator
+	return nil
+}
+
 func (c ClientRuntime) Start() error {
 	services, err := ExtractServiceDescription(c.serviceMap)
 	if err != nil {
