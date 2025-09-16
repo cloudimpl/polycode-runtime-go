@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/cloudimpl/byte-os/sdk"
+	"github.com/cloudimpl/polycode-sdk-go"
 )
 
 type Folder struct {

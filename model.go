@@ -1,8 +1,8 @@
 package runtime
 
 import (
-	"github.com/cloudimpl/byte-os/sdk"
 	"github.com/cloudimpl/byte-os/sdk/errors"
+	"github.com/cloudimpl/polycode-sdk-go"
 )
 
 const AgentNameHeader = "X-Sidecar-Agent-Name"

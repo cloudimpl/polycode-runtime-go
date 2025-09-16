@@ -3,7 +3,7 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/cloudimpl/byte-os/sdk"
+	"github.com/cloudimpl/polycode-sdk-go"
 )
 
 type AgentBuilder struct {
@@ -15,12 +15,12 @@ type AgentBuilder struct {
 	tenantId      string
 }
 
-func (r AgentBuilder) WithTenantId(tenantId string) sdk.AgentBuilder {
+func (r AgentBuilder) WithTenantId(tenantId string) polycode.AgentBuilder {
 	r.tenantId = tenantId
 	return r
 }
 
-func (r AgentBuilder) Get() sdk.Agent {
+func (r AgentBuilder) Get() polycode.Agent {
 	return Agent{
 		ctx:           r.ctx,
 		sessionId:     r.sessionId,
@@ -40,7 +40,7 @@ type Agent struct {
 	tenantId      string
 }
 
-func (r Agent) Call(options sdk.TaskOptions, input sdk.AgentInput) sdk.Response {
+func (r Agent) Call(options polycode.TaskOptions, input polycode.AgentInput) polycode.Response {
 	req := ExecServiceRequest{
 		EnvId:        r.envId,
 		Service:      "agent-service",

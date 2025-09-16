@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cloudimpl/byte-os/sdk"
+	"github.com/cloudimpl/polycode-sdk-go"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net"
@@ -21,7 +21,7 @@ type mockRuntime struct{}
 func (m mockRuntime) RunApi(ctx context.Context, input ApiStartEvent) ApiCompleteEvent {
 	return ApiCompleteEvent{
 		Path: "/test",
-		Response: ApiResponse{
+		Response: polycode.ApiResponse{
 			StatusCode:      200,
 			Header:          map[string]string{"Content-Type": "application/json"},
 			Body:            `{"message":"ok"}`,
@@ -101,7 +101,7 @@ func TestInvokeApiHandler_RealServer(t *testing.T) {
 
 	req := ApiStartEvent{
 		SessionId: "sess-1",
-		Meta: sdk.HandlerContextMeta{
+		Meta: polycode.HandlerContextMeta{
 			OrgId:        "org-1",
 			EnvId:        "dev",
 			AppName:      "testApp",
@@ -114,17 +114,17 @@ func TestInvokeApiHandler_RealServer(t *testing.T) {
 			ParentId:     "parent",
 			TraceId:      "trace",
 			InputId:      "input",
-			Caller: sdk.CallerContextMeta{
+			Caller: polycode.CallerContextMeta{
 				AppName:  "callerApp",
 				AppId:    "cid",
 				TaskName: "callerTask",
 				TaskId:   "ctid",
 			},
 		},
-		AuthContext: sdk.AuthContext{
+		AuthContext: polycode.AuthContext{
 			Claims: map[string]interface{}{"sub": "user-123"},
 		},
-		Request: ApiRequest{
+		Request: polycode.ApiRequest{
 			Id:     "req-id",
 			Host:   "localhost",
 			Method: "POST",
@@ -154,7 +154,7 @@ func TestInvokeServiceHandler_RealServer(t *testing.T) {
 		SessionId: "sess-2",
 		Service:   "my-service",
 		Method:    "doStuff",
-		Meta: sdk.HandlerContextMeta{
+		Meta: polycode.HandlerContextMeta{
 			OrgId:        "org-xyz",
 			EnvId:        "prod",
 			AppName:      "realApp",
@@ -167,14 +167,14 @@ func TestInvokeServiceHandler_RealServer(t *testing.T) {
 			ParentId:     "pid",
 			TraceId:      "trid",
 			InputId:      "inpid",
-			Caller: sdk.CallerContextMeta{
+			Caller: polycode.CallerContextMeta{
 				AppName:  "callerX",
 				AppId:    "callerX-id",
 				TaskName: "cTask",
 				TaskId:   "ctid",
 			},
 		},
-		AuthContext: sdk.AuthContext{
+		AuthContext: polycode.AuthContext{
 			Claims: map[string]interface{}{"role": "admin"},
 		},
 		Input: map[string]interface{}{"foo": "bar"},

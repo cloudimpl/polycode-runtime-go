@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"github.com/cloudimpl/byte-os/sdk"
+	"github.com/cloudimpl/polycode-sdk-go"
 	"io"
 	"mime"
 	"net/http"

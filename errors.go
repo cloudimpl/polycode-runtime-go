@@ -1,6 +1,6 @@
 package runtime
 
-import "github.com/cloudimpl/byte-os/sdk/errors"
+import "github.com/cloudimpl/polycode-sdk-go/errors"
 
 var ErrInternal = errors.DefineError("polycode.client.runtime", 1, "internal error")
 var ErrPanic = errors.DefineError("polycode.client.runtime", 2, "task in progress")

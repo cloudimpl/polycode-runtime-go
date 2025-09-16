@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/cloudimpl/byte-os/sdk"
+	"github.com/cloudimpl/polycode-sdk-go"
 )
 
 // ---- Mock client that satisfies the full ServiceClient interface ----
@@ -142,8 +142,8 @@ func TestAgentBuilder_WithTenantIdAndGet(t *testing.T) {
 func TestAgentCall_Success(t *testing.T) {
 	ctx := context.Background()
 	agentName := "echo"
-	input := sdk.AgentInput{SessionKey: "user-session-42"}
-	var opts sdk.TaskOptions
+	input := polycode.AgentInput{SessionKey: "user-session-42"}
+	var opts polycode.TaskOptions
 
 	wantReq := ExecServiceRequest{
 		EnvId:        "env-1",
@@ -197,8 +197,8 @@ func TestAgentCall_Success(t *testing.T) {
 func TestAgentCall_ExecError(t *testing.T) {
 	ctx := context.Background()
 	agentName := "alpha"
-	input := sdk.AgentInput{SessionKey: "s-1"}
-	var opts sdk.TaskOptions
+	input := polycode.AgentInput{SessionKey: "s-1"}
+	var opts polycode.TaskOptions
 
 	wantReq := ExecServiceRequest{
 		EnvId:        "env-A",

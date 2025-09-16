@@ -2,7 +2,7 @@ package runtime
 
 import (
 	"encoding/json"
-	"github.com/cloudimpl/byte-os/sdk"
+	"github.com/cloudimpl/polycode-sdk-go"
 	"time"
 )
 

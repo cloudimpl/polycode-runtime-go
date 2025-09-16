@@ -2,7 +2,7 @@ package runtime
 
 import (
 	"context"
-	"github.com/cloudimpl/byte-os/sdk"
+	"github.com/cloudimpl/polycode-sdk-go"
 	"time"
 )
 

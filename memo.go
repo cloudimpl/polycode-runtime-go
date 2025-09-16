@@ -3,8 +3,8 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/cloudimpl/byte-os/sdk"
 	"github.com/cloudimpl/byte-os/sdk/errors"
+	"github.com/cloudimpl/polycode-sdk-go"
 )
 
 type Memo struct {

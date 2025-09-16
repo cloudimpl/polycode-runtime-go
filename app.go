@@ -3,7 +3,7 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/cloudimpl/byte-os/sdk"
+	"github.com/cloudimpl/polycode-sdk-go"
 )
 
 type App struct {
@@ -14,7 +14,7 @@ type App struct {
 	serviceClient ServiceClient
 }
 
-func (r App) RequestReply(options sdk.TaskOptions, method string, input any) Response {
+func (r App) RequestReply(options polycode.TaskOptions, method string, input any) Response {
 	req := ExecAppRequest{
 		EnvId:   r.envId,
 		AppName: r.appName,

@@ -1,7 +1,7 @@
 module github.com/cloudimpl/byte-os/runtime
 
 require (
-	github.com/cloudimpl/byte-os/sdk v0.0.0
+	github.com/cloudimpl/polycode-sdk-go v0.0.0
 	github.com/gin-gonic/gin v1.10.1
 	github.com/invopop/jsonschema v0.13.0
 	github.com/stretchr/testify v1.9.0
@@ -42,6 +42,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/cloudimpl/byte-os/sdk => ../../sdks/go
+replace github.com/cloudimpl/polycode-sdk-go => ../../sdks/go
 
 go 1.24.5
