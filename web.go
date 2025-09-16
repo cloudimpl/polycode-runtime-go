@@ -14,7 +14,7 @@ import (
 // ResponseWriter implements the http.ResponseWriter interface
 // in order to support the API Gateway Lambda HTTP "protocol".
 type ResponseWriter struct {
-	out           sdk.ApiResponse
+	out           polycode.ApiResponse
 	buf           bytes.Buffer
 	header        http.Header
 	wroteHeader   bool
@@ -70,7 +70,7 @@ func (w *ResponseWriter) CloseNotify() <-chan bool {
 }
 
 // End the request.
-func (w *ResponseWriter) End() ApiResponse {
+func (w *ResponseWriter) End() polycode.ApiResponse {
 	w.out.IsBase64Encoded = isBinary(w.header)
 
 	if w.out.IsBase64Encoded {
@@ -123,7 +123,7 @@ type SerializableRequest struct {
 	Body   []byte
 }
 
-func ConvertToHttpRequest(ctx context.Context, apiReq ApiRequest) (*http.Request, error) {
+func ConvertToHttpRequest(ctx context.Context, apiReq polycode.ApiRequest) (*http.Request, error) {
 	// Build the URL
 	url := apiReq.Path
 	if len(apiReq.Query) > 0 {
@@ -158,7 +158,7 @@ func ConvertToHttpRequest(ctx context.Context, apiReq ApiRequest) (*http.Request
 	return req, nil
 }
 
-func ManualInvokeHandler(handler http.Handler, httpReq *http.Request) ApiResponse {
+func ManualInvokeHandler(handler http.Handler, httpReq *http.Request) polycode.ApiResponse {
 	customWriter := &ResponseWriter{}
 	handler.ServeHTTP(customWriter, httpReq)
 	return customWriter.End()

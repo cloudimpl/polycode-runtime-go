@@ -1,4 +1,4 @@
-module github.com/cloudimpl/byte-os/runtime
+module github.com/cloudimpl/polycode-runtime-go
 
 require (
 	github.com/cloudimpl/polycode-sdk-go v0.0.0

@@ -3,8 +3,8 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/cloudimpl/byte-os/sdk/errors"
 	"github.com/cloudimpl/polycode-sdk-go"
+	"github.com/cloudimpl/polycode-sdk-go/errors"
 )
 
 type Memo struct {
@@ -14,7 +14,7 @@ type Memo struct {
 	getter        func() (any, error)
 }
 
-func (f Memo) Get() sdk.Response {
+func (f Memo) Get() polycode.Response {
 	req1 := ExecFuncRequest{
 		Input: nil,
 	}

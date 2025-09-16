@@ -59,11 +59,11 @@ func getFreePort() (int, error) {
 
 // ---------- Helper: Start Server ----------
 
-func startTestServer(t *testing.T, r ClientRuntime) string {
+func startTestServer(t *testing.T, r ApiServerListener) string {
 	port, err := getFreePort()
 	assert.NoError(t, err)
 
-	server := &ApiServer{runtime: r}
+	server := &ApiServer{listener: r}
 	go server.Start(port)
 
 	url := fmt.Sprintf("http://localhost:%d", port)

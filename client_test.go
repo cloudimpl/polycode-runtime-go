@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"fmt"
+	"github.com/cloudimpl/polycode-sdk-go"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
@@ -32,7 +33,7 @@ func startMockBackendServer(port int) {
 	router.POST("/v1/context/api/exec", func(c *gin.Context) {
 		c.JSON(200, ExecApiResponse{
 			IsAsync: false,
-			Response: ApiResponse{
+			Response: polycode.ApiResponse{
 				StatusCode: 200,
 				Header:     map[string]string{"X-Mock": "true"},
 				Body:       `{"result":"api-ok"}`,

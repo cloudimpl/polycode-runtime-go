@@ -13,7 +13,7 @@ type Controller struct {
 	serviceClient ServiceClient
 }
 
-func (r Controller) Call(options sdk.TaskOptions, path string, apiReq sdk.ApiRequest) (sdk.ApiResponse, error) {
+func (r Controller) Call(options polycode.TaskOptions, path string, apiReq polycode.ApiRequest) (polycode.ApiResponse, error) {
 	req := ExecApiRequest{
 		EnvId:      r.envId,
 		Controller: r.controller,
@@ -24,11 +24,11 @@ func (r Controller) Call(options sdk.TaskOptions, path string, apiReq sdk.ApiReq
 
 	output, err := r.serviceClient.ExecApi(r.sessionId, req)
 	if err != nil {
-		return sdk.ApiResponse{}, err
+		return polycode.ApiResponse{}, err
 	}
 
 	if output.IsError {
-		return sdk.ApiResponse{}, output.Error
+		return polycode.ApiResponse{}, output.Error
 	}
 
 	return output.Response, nil

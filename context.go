@@ -10,8 +10,8 @@ type Context struct {
 	ctx       context.Context
 	sessionId string
 	client    ServiceClient
-	meta      sdk.HandlerContextMeta
-	authCtx   sdk.AuthContext
+	meta      polycode.HandlerContextMeta
+	authCtx   polycode.AuthContext
 }
 
 func (c Context) Deadline() (deadline time.Time, ok bool) {
@@ -30,28 +30,28 @@ func (c Context) Value(key any) any {
 	return c.ctx.Value(key)
 }
 
-func (c Context) Meta() sdk.HandlerContextMeta {
+func (c Context) Meta() polycode.HandlerContextMeta {
 	return c.meta
 }
 
-func (c Context) AuthContext() sdk.AuthContext {
+func (c Context) AuthContext() polycode.AuthContext {
 	return c.authCtx
 }
 
-func (c Context) Logger() sdk.Logger {
+func (c Context) Logger() polycode.Logger {
 	return JsonLogger{
 		section: "task",
 	}
 }
 
-func (c Context) UnsafeDb() sdk.DataStoreBuilder {
+func (c Context) UnsafeDb() polycode.DataStoreBuilder {
 	return UnsafeDataStoreBuilder{
 		sessionId: c.sessionId,
 		client:    c.client,
 	}
 }
 
-func (c Context) FileStore() sdk.Folder {
+func (c Context) FileStore() polycode.Folder {
 	return Folder{
 		sessionId: c.sessionId,
 		client:    c.client,
@@ -60,7 +60,7 @@ func (c Context) FileStore() sdk.Folder {
 	}
 }
 
-func (c Context) TempFileStore() sdk.Folder {
+func (c Context) TempFileStore() polycode.Folder {
 	return Folder{
 		sessionId: c.sessionId,
 		client:    c.client,
@@ -69,14 +69,14 @@ func (c Context) TempFileStore() sdk.Folder {
 	}
 }
 
-func (c Context) Db() sdk.DataStore {
+func (c Context) Db() polycode.DataStore {
 	return DataStore{
 		sessionId: c.sessionId,
 		client:    c.client,
 	}
 }
 
-func (c Context) Service(service string) sdk.ServiceBuilder {
+func (c Context) Service(service string) polycode.ServiceBuilder {
 	return ServiceBuilder{
 		ctx:           c.ctx,
 		sessionId:     c.sessionId,
@@ -85,7 +85,7 @@ func (c Context) Service(service string) sdk.ServiceBuilder {
 	}
 }
 
-func (c Context) Agent(agent string) sdk.AgentBuilder {
+func (c Context) Agent(agent string) polycode.AgentBuilder {
 	return AgentBuilder{
 		ctx:           c.ctx,
 		sessionId:     c.sessionId,
@@ -94,7 +94,7 @@ func (c Context) Agent(agent string) sdk.AgentBuilder {
 	}
 }
 
-func (c Context) ServiceEx(envId string, service string) sdk.ServiceBuilder {
+func (c Context) ServiceEx(envId string, service string) polycode.ServiceBuilder {
 	return ServiceBuilder{
 		ctx:           c.ctx,
 		sessionId:     c.sessionId,
@@ -104,7 +104,7 @@ func (c Context) ServiceEx(envId string, service string) sdk.ServiceBuilder {
 	}
 }
 
-func (c Context) AgentEx(envId string, agent string) sdk.AgentBuilder {
+func (c Context) AgentEx(envId string, agent string) polycode.AgentBuilder {
 	return AgentBuilder{
 		ctx:           c.ctx,
 		sessionId:     c.sessionId,
@@ -114,17 +114,17 @@ func (c Context) AgentEx(envId string, agent string) sdk.AgentBuilder {
 	}
 }
 
-func (c Context) App(appName string) sdk.Service {
+func (c Context) App(appName string) polycode.Service {
 	// new method added with v2
 	panic("implement me")
 }
 
-func (c Context) AppEx(envId string, appName string) sdk.Service {
+func (c Context) AppEx(envId string, appName string) polycode.Service {
 	// new method added with v2
 	panic("implement me")
 }
 
-func (c Context) Controller(controller string) sdk.Controller {
+func (c Context) Controller(controller string) polycode.Controller {
 	return Controller{
 		ctx:           c.ctx,
 		sessionId:     c.sessionId,
@@ -133,7 +133,7 @@ func (c Context) Controller(controller string) sdk.Controller {
 	}
 }
 
-func (c Context) ControllerEx(envId string, controller string) sdk.Controller {
+func (c Context) ControllerEx(envId string, controller string) polycode.Controller {
 	return Controller{
 		ctx:           c.ctx,
 		sessionId:     c.sessionId,
@@ -143,7 +143,7 @@ func (c Context) ControllerEx(envId string, controller string) sdk.Controller {
 	}
 }
 
-func (c Context) Memo(getter func() (any, error)) sdk.Response {
+func (c Context) Memo(getter func() (any, error)) polycode.Response {
 	return Memo{
 		ctx:           c.ctx,
 		sessionId:     c.sessionId,
@@ -152,12 +152,12 @@ func (c Context) Memo(getter func() (any, error)) sdk.Response {
 	}.Get()
 }
 
-func (c Context) Signal(signalName string) sdk.Signal {
+func (c Context) Signal(signalName string) polycode.Signal {
 	// not implemented, old architecture is not good
 	panic("implement me")
 }
 
-func (c Context) ClientChannel(channelName string) sdk.ClientChannel {
+func (c Context) ClientChannel(channelName string) polycode.ClientChannel {
 	return ClientChannel{
 		name:          channelName,
 		sessionId:     c.sessionId,
@@ -165,7 +165,7 @@ func (c Context) ClientChannel(channelName string) sdk.ClientChannel {
 	}
 }
 
-func (c Context) Lock(key string) sdk.Lock {
+func (c Context) Lock(key string) polycode.Lock {
 	return Lock{
 		client:    c.client,
 		sessionId: c.sessionId,

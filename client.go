@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/cloudimpl/byte-os/sdk/errors"
 	"github.com/cloudimpl/polycode-sdk-go"
+	"github.com/cloudimpl/polycode-sdk-go/errors"
 	"log"
 	"net/http"
 	"time"
@@ -31,24 +31,24 @@ type StartAppRequest struct {
 }
 
 type ExecServiceRequest struct {
-	EnvId         string            `json:"envId"`
-	Service       string            `json:"service"`
-	TenantId      string            `json:"tenantId"`
-	PartitionKey  string            `json:"partitionKey"`
-	Method        string            `json:"method"`
-	Options       sdk.TaskOptions   `json:"options"`
-	FireAndForget bool              `json:"fireAndForget"`
-	Headers       map[string]string `json:"headers"`
-	Input         any               `json:"input"`
+	EnvId         string               `json:"envId"`
+	Service       string               `json:"service"`
+	TenantId      string               `json:"tenantId"`
+	PartitionKey  string               `json:"partitionKey"`
+	Method        string               `json:"method"`
+	Options       polycode.TaskOptions `json:"options"`
+	FireAndForget bool                 `json:"fireAndForget"`
+	Headers       map[string]string    `json:"headers"`
+	Input         any                  `json:"input"`
 }
 
 type ExecAppRequest struct {
-	EnvId         string          `json:"envId"`
-	AppName       string          `json:"service"`
-	Method        string          `json:"method"`
-	Options       sdk.TaskOptions `json:"options"`
-	FireAndForget bool            `json:"fireAndForget"`
-	Input         any             `json:"input"`
+	EnvId         string               `json:"envId"`
+	AppName       string               `json:"service"`
+	Method        string               `json:"method"`
+	Options       polycode.TaskOptions `json:"options"`
+	FireAndForget bool                 `json:"fireAndForget"`
+	Input         any                  `json:"input"`
 }
 
 type ExecServiceExtendedRequest struct {
@@ -76,12 +76,12 @@ type ExecAppResponse struct {
 }
 
 type ExecApiRequest struct {
-	EnvId         string          `json:"envId"`
-	Controller    string          `json:"controller"`
-	Path          string          `json:"path"`
-	Options       sdk.TaskOptions `json:"options"`
-	FireAndForget bool            `json:"fireAndForget"`
-	Request       sdk.ApiRequest  `json:"request"`
+	EnvId         string               `json:"envId"`
+	Controller    string               `json:"controller"`
+	Path          string               `json:"path"`
+	Options       polycode.TaskOptions `json:"options"`
+	FireAndForget bool                 `json:"fireAndForget"`
+	Request       polycode.ApiRequest  `json:"request"`
 }
 
 type ExecApiExtendedRequest struct {
@@ -90,10 +90,10 @@ type ExecApiExtendedRequest struct {
 }
 
 type ExecApiResponse struct {
-	IsAsync  bool            `json:"isAsync"`
-	Response sdk.ApiResponse `json:"response"`
-	IsError  bool            `json:"isError"`
-	Error    errors.Error    `json:"error"`
+	IsAsync  bool                 `json:"isAsync"`
+	Response polycode.ApiResponse `json:"response"`
+	IsError  bool                 `json:"isError"`
+	Error    errors.Error         `json:"error"`
 }
 
 type ExecFuncRequest struct {

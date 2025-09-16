@@ -10,11 +10,11 @@ import (
 type Folder struct {
 	client    ServiceClient
 	sessionId string
-	parent    sdk.Folder
+	parent    polycode.Folder
 	name      string
 }
 
-func (f Folder) Parent() sdk.Folder {
+func (f Folder) Parent() polycode.Folder {
 	return f.parent
 }
 
@@ -26,7 +26,7 @@ func (f Folder) Path() string {
 	return f.parent.Path() + "/" + f.name
 }
 
-func (f Folder) Folder(name string) sdk.Folder {
+func (f Folder) Folder(name string) polycode.Folder {
 	return Folder{
 		client:    f.client,
 		sessionId: f.sessionId,
@@ -35,7 +35,7 @@ func (f Folder) Folder(name string) sdk.Folder {
 	}
 }
 
-func (f Folder) CreateNewFolder(name string) (sdk.Folder, error) {
+func (f Folder) CreateNewFolder(name string) (polycode.Folder, error) {
 	req := CreateFolderRequest{
 		Folder: name,
 	}
@@ -49,7 +49,7 @@ func (f Folder) CreateNewFolder(name string) (sdk.Folder, error) {
 	return f.Folder(name), nil
 }
 
-func (f Folder) File(name string) sdk.File {
+func (f Folder) File(name string) polycode.File {
 	return File{
 		client:    f.client,
 		sessionId: f.sessionId,
@@ -61,11 +61,11 @@ func (f Folder) File(name string) sdk.File {
 type File struct {
 	client    ServiceClient
 	sessionId string
-	parent    sdk.Folder
+	parent    polycode.Folder
 	name      string
 }
 
-func (f File) Parent() sdk.Folder {
+func (f File) Parent() polycode.Folder {
 	return f.parent
 }
 
@@ -197,7 +197,7 @@ func (f File) Rename(newName string) error {
 	return nil
 }
 
-func (f File) MoveTo(dest sdk.Folder) error {
+func (f File) MoveTo(dest polycode.Folder) error {
 	req := RenameFileRequest{
 		OldKey: f.Path(),
 		NewKey: dest.Path() + "/" + f.name,
@@ -213,7 +213,7 @@ func (f File) MoveTo(dest sdk.Folder) error {
 	return nil
 }
 
-func (f File) CopyTo(dest sdk.Folder) error {
+func (f File) CopyTo(dest polycode.Folder) error {
 	// new method added with v2
 	panic("implement me")
 }

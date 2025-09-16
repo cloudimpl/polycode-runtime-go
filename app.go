@@ -41,7 +41,7 @@ func (r App) RequestReply(options polycode.TaskOptions, method string, input any
 	}
 }
 
-func (r App) Send(options sdk.TaskOptions, method string, input any) error {
+func (r App) Send(options polycode.TaskOptions, method string, input any) error {
 	req := ExecAppRequest{
 		EnvId:         r.envId,
 		AppName:       r.appName,

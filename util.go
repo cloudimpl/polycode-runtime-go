@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	errors2 "github.com/cloudimpl/byte-os/sdk/errors"
-	"github.com/cloudimpl/byte-os/sdk/runtime"
 	"github.com/cloudimpl/polycode-sdk-go"
+	errors2 "github.com/cloudimpl/polycode-sdk-go/errors"
+	"github.com/cloudimpl/polycode-sdk-go/runtime"
 	"github.com/gin-gonic/gin"
 	"github.com/invopop/jsonschema"
 	"log"
@@ -42,7 +42,7 @@ func ErrorToServiceComplete(err errors2.Error, stacktraceStr string) ServiceComp
 
 func ErrorToApiComplete(err errors2.Error) ApiCompleteEvent {
 	return ApiCompleteEvent{
-		Response: sdk.ApiResponse{
+		Response: polycode.ApiResponse{
 			StatusCode:      500,
 			Header:          make(map[string]string),
 			Body:            err.ToJson(),

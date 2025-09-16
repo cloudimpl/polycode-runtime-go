@@ -13,17 +13,17 @@ type UnsafeDataStoreBuilder struct {
 	partitionKey string
 }
 
-func (f UnsafeDataStoreBuilder) WithTenantId(tenantId string) sdk.DataStoreBuilder {
+func (f UnsafeDataStoreBuilder) WithTenantId(tenantId string) polycode.DataStoreBuilder {
 	f.tenantId = tenantId
 	return f
 }
 
-func (f UnsafeDataStoreBuilder) WithPartitionKey(partitionKey string) sdk.DataStoreBuilder {
+func (f UnsafeDataStoreBuilder) WithPartitionKey(partitionKey string) polycode.DataStoreBuilder {
 	f.partitionKey = partitionKey
 	return f
 }
 
-func (f UnsafeDataStoreBuilder) Get() sdk.DataStore {
+func (f UnsafeDataStoreBuilder) Get() polycode.DataStore {
 	fmt.Printf("getting unsafe db for tenant id = %s and partition key = %s", f.tenantId, f.partitionKey)
 	return UnsafeDataStore{
 		client:       f.client,
@@ -40,7 +40,7 @@ type UnsafeDataStore struct {
 	partitionKey string
 }
 
-func (u UnsafeDataStore) Collection(name string) sdk.Collection {
+func (u UnsafeDataStore) Collection(name string) polycode.Collection {
 	return UnsafeCollection{
 		client:       u.client,
 		sessionId:    u.sessionId,
@@ -50,7 +50,7 @@ func (u UnsafeDataStore) Collection(name string) sdk.Collection {
 	}
 }
 
-func (u UnsafeDataStore) GlobalCollection(name string) sdk.Collection {
+func (u UnsafeDataStore) GlobalCollection(name string) polycode.Collection {
 	return UnsafeCollection{
 		client:       u.client,
 		sessionId:    u.sessionId,
@@ -66,7 +66,7 @@ type DataStore struct {
 	sessionId string
 }
 
-func (d DataStore) Collection(name string) sdk.Collection {
+func (d DataStore) Collection(name string) polycode.Collection {
 	return Collection{
 		client:    d.client,
 		sessionId: d.sessionId,
@@ -74,7 +74,7 @@ func (d DataStore) Collection(name string) sdk.Collection {
 	}
 }
 
-func (d DataStore) GlobalCollection(name string) sdk.Collection {
+func (d DataStore) GlobalCollection(name string) polycode.Collection {
 	return Collection{
 		client:    d.client,
 		sessionId: d.sessionId,
@@ -266,7 +266,7 @@ func (c UnsafeCollection) GetOne(key string, ret interface{}) (bool, error) {
 	return true, nil
 }
 
-func (c UnsafeCollection) Query() sdk.Query {
+func (c UnsafeCollection) Query() polycode.Query {
 	return UnsafeQuery{
 		tenantId:     c.tenantId,
 		partitionKey: c.partitionKey,
@@ -435,7 +435,7 @@ func (c Collection) GetOne(key string, ret interface{}) (bool, error) {
 	return true, nil
 }
 
-func (c Collection) Query() sdk.Query {
+func (c Collection) Query() polycode.Query {
 	return Query{
 		collection: &c,
 	}

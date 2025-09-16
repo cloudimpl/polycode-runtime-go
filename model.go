@@ -1,27 +1,27 @@
 package runtime
 
 import (
-	"github.com/cloudimpl/byte-os/sdk/errors"
 	"github.com/cloudimpl/polycode-sdk-go"
+	"github.com/cloudimpl/polycode-sdk-go/errors"
 )
 
 const AgentNameHeader = "X-Sidecar-Agent-Name"
 
 type MethodStartEvent struct {
-	SessionId   string                 `json:"sessionId"`
-	Method      string                 `json:"method"`
-	Meta        sdk.HandlerContextMeta `json:"meta"`
-	AuthContext sdk.AuthContext        `json:"authContext"`
-	Input       any                    `json:"input"`
+	SessionId   string                      `json:"sessionId"`
+	Method      string                      `json:"method"`
+	Meta        polycode.HandlerContextMeta `json:"meta"`
+	AuthContext polycode.AuthContext        `json:"authContext"`
+	Input       any                         `json:"input"`
 }
 
 type ServiceStartEvent struct {
-	SessionId   string                 `json:"sessionId"`
-	Service     string                 `json:"service"`
-	Method      string                 `json:"method"`
-	Meta        sdk.HandlerContextMeta `json:"meta"`
-	AuthContext sdk.AuthContext        `json:"authContext"`
-	Input       any                    `json:"input"`
+	SessionId   string                      `json:"sessionId"`
+	Service     string                      `json:"service"`
+	Method      string                      `json:"method"`
+	Meta        polycode.HandlerContextMeta `json:"meta"`
+	AuthContext polycode.AuthContext        `json:"authContext"`
+	Input       any                         `json:"input"`
 }
 
 type ServiceCompleteEvent struct {
@@ -33,16 +33,16 @@ type ServiceCompleteEvent struct {
 }
 
 type ApiStartEvent struct {
-	SessionId   string                 `json:"sessionId"`
-	Meta        sdk.HandlerContextMeta `json:"meta"`
-	AuthContext sdk.AuthContext        `json:"authContext"`
-	Request     sdk.ApiRequest         `json:"request"`
+	SessionId   string                      `json:"sessionId"`
+	Meta        polycode.HandlerContextMeta `json:"meta"`
+	AuthContext polycode.AuthContext        `json:"authContext"`
+	Request     polycode.ApiRequest         `json:"request"`
 }
 
 type ApiCompleteEvent struct {
-	Path     string          `json:"path"`
-	Response sdk.ApiResponse `json:"response"`
-	Logs     []LogMsg        `json:"logs"`
+	Path     string               `json:"path"`
+	Response polycode.ApiResponse `json:"response"`
+	Logs     []LogMsg             `json:"logs"`
 }
 
 type ErrorEvent struct {

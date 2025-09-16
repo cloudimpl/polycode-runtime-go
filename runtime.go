@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cloudimpl/byte-os/sdk/runtime"
 	"github.com/cloudimpl/polycode-sdk-go"
+	"github.com/cloudimpl/polycode-sdk-go/runtime"
 	"github.com/gin-gonic/gin"
 	"log"
 	"runtime/debug"
@@ -16,7 +16,7 @@ type ClientRuntime struct {
 	serviceMap  map[string]runtime.Service
 	httpHandler *gin.Engine
 	client      ServiceClient
-	validator   sdk.Validator
+	validator   polycode.Validator
 }
 
 func (c ClientRuntime) getService(serviceName string) (runtime.Service, error) {
@@ -102,7 +102,7 @@ func (c ClientRuntime) RunService(ctx context.Context, event ServiceStartEvent) 
 
 				errorStr := fmt.Sprintf("recoverted %v", r)
 				fmt.Printf("recoverted %v", r)
-				err2 := ErrInternal.Wrap(fmt.Errorf(errorStr))
+				err2 := ErrInternal.Wrap(errors.New(errorStr))
 				evt = ErrorToServiceComplete(err2, stackTrace)
 			}
 		}
@@ -176,7 +176,7 @@ func (c ClientRuntime) RunApi(ctx context.Context, event ApiStartEvent) (evt Api
 				if errors.Is(recovered, ErrTaskStopped) {
 					fmt.Printf("api stopped %s %s", event.Request.Method, event.Request.Path)
 					evt = ApiCompleteEvent{
-						Response: sdk.ApiResponse{
+						Response: polycode.ApiResponse{
 							StatusCode:      202,
 							Header:          make(map[string]string),
 							Body:            "",
@@ -189,7 +189,7 @@ func (c ClientRuntime) RunApi(ctx context.Context, event ApiStartEvent) (evt Api
 					fmt.Printf("recovered %v", r)
 					err2 := ErrInternal.Wrap(recovered)
 					evt = ApiCompleteEvent{
-						Response: sdk.ApiResponse{
+						Response: polycode.ApiResponse{
 							StatusCode:      500,
 							Header:          make(map[string]string),
 							Body:            err2.ToJson(),
@@ -203,9 +203,9 @@ func (c ClientRuntime) RunApi(ctx context.Context, event ApiStartEvent) (evt Api
 
 				errorStr := fmt.Sprintf("recoverted %v", r)
 				fmt.Printf("recoverted %v", r)
-				err2 := ErrInternal.Wrap(fmt.Errorf(errorStr))
+				err2 := ErrInternal.Wrap(errors.New(errorStr))
 				evt = ApiCompleteEvent{
-					Response: sdk.ApiResponse{
+					Response: polycode.ApiResponse{
 						StatusCode:      500,
 						Header:          make(map[string]string),
 						Body:            err2.ToJson(),

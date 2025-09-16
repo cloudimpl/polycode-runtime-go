@@ -1,7 +1,7 @@
 package runtime
 
 import (
-	"github.com/cloudimpl/byte-os/sdk/errors"
+	"github.com/cloudimpl/polycode-sdk-go/errors"
 )
 
 type Response struct {

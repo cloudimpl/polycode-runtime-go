@@ -14,13 +14,13 @@ type Query struct {
 	limit      int
 }
 
-func (q Query) Filter(expr string, args ...interface{}) sdk.Query {
+func (q Query) Filter(expr string, args ...interface{}) polycode.Query {
 	q.filter = expr
 	q.args = args
 	return q
 }
 
-func (q Query) Limit(limit int) sdk.Query {
+func (q Query) Limit(limit int) polycode.Query {
 	q.limit = limit
 	return q
 }
@@ -88,13 +88,13 @@ type UnsafeQuery struct {
 	limit        int
 }
 
-func (q UnsafeQuery) Filter(expr string, args ...interface{}) sdk.Query {
+func (q UnsafeQuery) Filter(expr string, args ...interface{}) polycode.Query {
 	q.filter = expr
 	q.args = args
 	return q
 }
 
-func (q UnsafeQuery) Limit(limit int) sdk.Query {
+func (q UnsafeQuery) Limit(limit int) polycode.Query {
 	q.limit = limit
 	return q
 }

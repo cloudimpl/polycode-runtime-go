@@ -16,17 +16,17 @@ type ServiceBuilder struct {
 	partitionKey  string
 }
 
-func (r ServiceBuilder) WithTenantId(tenantId string) sdk.ServiceBuilder {
+func (r ServiceBuilder) WithTenantId(tenantId string) polycode.ServiceBuilder {
 	r.tenantId = tenantId
 	return r
 }
 
-func (r ServiceBuilder) WithPartitionKey(partitionKey string) sdk.ServiceBuilder {
+func (r ServiceBuilder) WithPartitionKey(partitionKey string) polycode.ServiceBuilder {
 	r.partitionKey = partitionKey
 	return r
 }
 
-func (r ServiceBuilder) Get() sdk.Service {
+func (r ServiceBuilder) Get() polycode.Service {
 	return Service{
 		ctx:           r.ctx,
 		sessionId:     r.sessionId,
@@ -48,7 +48,7 @@ type Service struct {
 	partitionKey  string
 }
 
-func (r Service) RequestReply(options sdk.TaskOptions, method string, input any) sdk.Response {
+func (r Service) RequestReply(options polycode.TaskOptions, method string, input any) polycode.Response {
 	req := ExecServiceRequest{
 		EnvId:        r.envId,
 		Service:      r.service,
@@ -77,7 +77,7 @@ func (r Service) RequestReply(options sdk.TaskOptions, method string, input any)
 	}
 }
 
-func (r Service) Send(options sdk.TaskOptions, method string, input any) error {
+func (r Service) Send(options polycode.TaskOptions, method string, input any) error {
 	req := ExecServiceRequest{
 		EnvId:         r.envId,
 		Service:       r.service,
