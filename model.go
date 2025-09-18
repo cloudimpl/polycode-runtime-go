@@ -67,6 +67,7 @@ type MethodDescription struct {
 }
 
 type ClientEnv struct {
-	AppName string `json:"appName"`
-	AppPort uint   `json:"appPort"`
+	AppName    string `json:"appName"`
+	AppPort    uint   `json:"appPort"`
+	SidecarApi string `json:"sidecarApi"`
 }

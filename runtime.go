@@ -63,6 +63,10 @@ func (c ClientRuntime) RegisterValidator(validator polycode.Validator) error {
 	return nil
 }
 
+func (c ClientRuntime) GetValidator() polycode.Validator {
+	return c.validator
+}
+
 func (c ClientRuntime) Start() error {
 	services, err := ExtractServiceDescription(c.serviceMap)
 	if err != nil {
