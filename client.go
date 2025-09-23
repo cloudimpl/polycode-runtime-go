@@ -33,8 +33,6 @@ type StartAppRequest struct {
 type ExecServiceRequest struct {
 	EnvId         string               `json:"envId"`
 	Service       string               `json:"service"`
-	TenantId      string               `json:"tenantId"`
-	PartitionKey  string               `json:"partitionKey"`
 	Method        string               `json:"method"`
 	Options       polycode.TaskOptions `json:"options"`
 	FireAndForget bool                 `json:"fireAndForget"`
@@ -117,34 +115,26 @@ type ExecFuncResponse struct {
 
 // PutRequest represents the JSON structure for put operations
 type PutRequest struct {
-	Action     DbAction `json:"action"`
-	IsGlobal   bool     `json:"isGlobal"`
-	Collection string   `json:"collection"`
-	Key        string   `json:"key"`
-	Item       any      `json:"item"`
-	TTL        int64    `json:"TTL"`
-}
-
-type UnsafePutRequest struct {
-	TenantId     string     `json:"tenantId"`
-	PartitionKey string     `json:"partitionKey"`
-	PutRequest   PutRequest `json:"putRequest"`
+	TenantId     string   `json:"tenantId"`
+	PartitionKey string   `json:"partitionKey"`
+	Action       DbAction `json:"action"`
+	IsGlobal     bool     `json:"isGlobal"`
+	Collection   string   `json:"collection"`
+	Key          string   `json:"key"`
+	Item         any      `json:"item"`
+	TTL          int64    `json:"TTL"`
 }
 
 // QueryRequest represents the JSON structure for query operations
 type QueryRequest struct {
-	IsGlobal   bool          `json:"isGlobal"`
-	Collection string        `json:"collection"`
-	Key        string        `json:"key"`
-	Filter     string        `json:"filter"`
-	Args       []interface{} `json:"args"`
-	Limit      int           `json:"limit"`
-}
-
-type UnsafeQueryRequest struct {
-	TenantId     string       `json:"tenantId"`
-	PartitionKey string       `json:"partitionKey"`
-	QueryRequest QueryRequest `json:"queryRequest"`
+	TenantId     string        `json:"tenantId"`
+	PartitionKey string        `json:"partitionKey"`
+	IsGlobal     bool          `json:"isGlobal"`
+	Collection   string        `json:"collection"`
+	Key          string        `json:"key"`
+	Filter       string        `json:"filter"`
+	Args         []interface{} `json:"args"`
+	Limit        int           `json:"limit"`
 }
 
 // GetFileRequest represents the JSON structure for get file operations
@@ -281,12 +271,8 @@ type ServiceClient interface {
 	ExecFuncResult(sessionId string, req ExecFuncResult) error
 
 	GetItem(sessionId string, req QueryRequest) (map[string]interface{}, error)
-	UnsafeGetItem(sessionId string, req UnsafeQueryRequest) (map[string]interface{}, error)
 	QueryItems(sessionId string, req QueryRequest) ([]map[string]interface{}, error)
-	UnsafeQueryItems(sessionId string, req UnsafeQueryRequest) ([]map[string]interface{}, error)
-
 	PutItem(sessionId string, req PutRequest) error
-	UnsafePutItem(sessionId string, req UnsafePutRequest) error
 
 	GetFile(sessionId string, req GetFileRequest) (GetFileResponse, error)
 	GetFileDownloadLink(sessionId string, req GetFileRequest) (GetLinkResponse, error)
@@ -399,12 +385,6 @@ func (sc *ServiceClientImpl) GetItem(sessionId string, req QueryRequest) (map[st
 	return res, err
 }
 
-func (sc *ServiceClientImpl) UnsafeGetItem(sessionId string, req UnsafeQueryRequest) (map[string]interface{}, error) {
-	var res map[string]interface{}
-	err := executeApiWithResponse(sc.httpClient, sc.baseURL, sessionId, "v1/context/db/unsafe-get", req, &res)
-	return res, err
-}
-
 // QueryItems queries items from the database
 func (sc *ServiceClientImpl) QueryItems(sessionId string, req QueryRequest) ([]map[string]interface{}, error) {
 	var res []map[string]interface{}
@@ -412,19 +392,9 @@ func (sc *ServiceClientImpl) QueryItems(sessionId string, req QueryRequest) ([]m
 	return res, err
 }
 
-func (sc *ServiceClientImpl) UnsafeQueryItems(sessionId string, req UnsafeQueryRequest) ([]map[string]interface{}, error) {
-	var res []map[string]interface{}
-	err := executeApiWithResponse(sc.httpClient, sc.baseURL, sessionId, "v1/context/db/unsafe-query", req, &res)
-	return res, err
-}
-
 // PutItem puts an item into the database
 func (sc *ServiceClientImpl) PutItem(sessionId string, req PutRequest) error {
 	return executeApiWithoutResponse(sc.httpClient, sc.baseURL, sessionId, "v1/context/db/put", req)
-}
-
-func (sc *ServiceClientImpl) UnsafePutItem(sessionId string, req UnsafePutRequest) error {
-	return executeApiWithoutResponse(sc.httpClient, sc.baseURL, sessionId, "v1/context/db/unsafe-put", req)
 }
 
 // GetFile gets a file from the file store

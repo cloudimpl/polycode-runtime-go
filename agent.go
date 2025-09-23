@@ -12,11 +12,10 @@ type AgentBuilder struct {
 	envId         string
 	agent         string
 	serviceClient ServiceClient
-	tenantId      string
 }
 
-func (r AgentBuilder) WithTenantId(tenantId string) polycode.AgentBuilder {
-	r.tenantId = tenantId
+func (r AgentBuilder) WithEnvId(envId string) polycode.AgentBuilder {
+	r.envId = envId
 	return r
 }
 
@@ -27,7 +26,6 @@ func (r AgentBuilder) Get() polycode.Agent {
 		envId:         r.envId,
 		agent:         r.agent,
 		serviceClient: r.serviceClient,
-		tenantId:      r.tenantId,
 	}
 }
 
@@ -37,17 +35,14 @@ type Agent struct {
 	envId         string
 	agent         string
 	serviceClient ServiceClient
-	tenantId      string
 }
 
 func (r Agent) Call(options polycode.TaskOptions, input polycode.AgentInput) polycode.Response {
 	req := ExecServiceRequest{
-		EnvId:        r.envId,
-		Service:      "agent-service",
-		TenantId:     r.tenantId,
-		PartitionKey: r.agent + ":" + input.SessionKey,
-		Method:       "CallAgent",
-		Options:      options,
+		EnvId:   r.envId,
+		Service: "agent-service",
+		Method:  "CallAgent",
+		Options: options.WithSequenceKey(r.agent + ":" + input.SessionKey),
 		Headers: map[string]string{
 			AgentNameHeader: r.agent,
 		},

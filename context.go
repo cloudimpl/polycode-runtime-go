@@ -44,8 +44,15 @@ func (c Context) Logger() polycode.Logger {
 	}
 }
 
-func (c Context) UnsafeDb() polycode.DataStoreBuilder {
-	return UnsafeDataStoreBuilder{
+func (c Context) ReadOnlyDb() polycode.ReadOnlyDataStoreBuilder {
+	return ReadOnlyDataStoreBuilder{
+		sessionId: c.sessionId,
+		client:    c.client,
+	}
+}
+
+func (c Context) Db() polycode.DataStoreBuilder {
+	return DataStoreBuilder{
 		sessionId: c.sessionId,
 		client:    c.client,
 	}
@@ -66,13 +73,6 @@ func (c Context) TempFileStore() polycode.Folder {
 		client:    c.client,
 		parent:    nil,
 		name:      "temp-files",
-	}
-}
-
-func (c Context) Db() polycode.DataStore {
-	return DataStore{
-		sessionId: c.sessionId,
-		client:    c.client,
 	}
 }
 

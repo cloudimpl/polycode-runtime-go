@@ -12,17 +12,10 @@ type ServiceBuilder struct {
 	envId         string
 	service       string
 	serviceClient ServiceClient
-	tenantId      string
-	partitionKey  string
 }
 
-func (r ServiceBuilder) WithTenantId(tenantId string) polycode.ServiceBuilder {
-	r.tenantId = tenantId
-	return r
-}
-
-func (r ServiceBuilder) WithPartitionKey(partitionKey string) polycode.ServiceBuilder {
-	r.partitionKey = partitionKey
+func (r ServiceBuilder) WithEnvId(envId string) polycode.ServiceBuilder {
+	r.envId = envId
 	return r
 }
 
@@ -33,8 +26,6 @@ func (r ServiceBuilder) Get() polycode.Service {
 		envId:         r.envId,
 		service:       r.service,
 		serviceClient: r.serviceClient,
-		tenantId:      r.tenantId,
-		partitionKey:  r.partitionKey,
 	}
 }
 
@@ -44,19 +35,15 @@ type Service struct {
 	envId         string
 	service       string
 	serviceClient ServiceClient
-	tenantId      string
-	partitionKey  string
 }
 
 func (r Service) RequestReply(options polycode.TaskOptions, method string, input any) polycode.Response {
 	req := ExecServiceRequest{
-		EnvId:        r.envId,
-		Service:      r.service,
-		TenantId:     r.tenantId,
-		PartitionKey: r.partitionKey,
-		Method:       method,
-		Options:      options,
-		Input:        input,
+		EnvId:   r.envId,
+		Service: r.service,
+		Method:  method,
+		Options: options,
+		Input:   input,
 	}
 
 	output, err := r.serviceClient.ExecService(r.sessionId, req)
@@ -81,8 +68,6 @@ func (r Service) Send(options polycode.TaskOptions, method string, input any) er
 	req := ExecServiceRequest{
 		EnvId:         r.envId,
 		Service:       r.service,
-		TenantId:      r.tenantId,
-		PartitionKey:  r.partitionKey,
 		Method:        method,
 		Options:       options,
 		FireAndForget: true,
