@@ -115,26 +115,24 @@ type ExecFuncResponse struct {
 
 // PutRequest represents the JSON structure for put operations
 type PutRequest struct {
-	TenantId     string   `json:"tenantId"`
-	PartitionKey string   `json:"partitionKey"`
-	Action       DbAction `json:"action"`
-	IsGlobal     bool     `json:"isGlobal"`
-	Collection   string   `json:"collection"`
-	Key          string   `json:"key"`
-	Item         any      `json:"item"`
-	TTL          int64    `json:"TTL"`
+	TenantId   string   `json:"tenantId"`
+	Action     DbAction `json:"action"`
+	IsGlobal   bool     `json:"isGlobal"`
+	Collection string   `json:"collection"`
+	Key        string   `json:"key"`
+	Item       any      `json:"item"`
+	TTL        int64    `json:"TTL"`
 }
 
 // QueryRequest represents the JSON structure for query operations
 type QueryRequest struct {
-	TenantId     string        `json:"tenantId"`
-	PartitionKey string        `json:"partitionKey"`
-	IsGlobal     bool          `json:"isGlobal"`
-	Collection   string        `json:"collection"`
-	Key          string        `json:"key"`
-	Filter       string        `json:"filter"`
-	Args         []interface{} `json:"args"`
-	Limit        int           `json:"limit"`
+	TenantId   string        `json:"tenantId"`
+	IsGlobal   bool          `json:"isGlobal"`
+	Collection string        `json:"collection"`
+	Key        string        `json:"key"`
+	Filter     string        `json:"filter"`
+	Args       []interface{} `json:"args"`
+	Limit      int           `json:"limit"`
 }
 
 // GetFileRequest represents the JSON structure for get file operations

@@ -1,16 +1,20 @@
 package runtime
 
 import (
+	"context"
 	"fmt"
 	"github.com/cloudimpl/polycode-sdk-go"
+	"log"
 	"time"
 )
 
+type Doc struct {
+}
+
 type ReadOnlyDataStoreBuilder struct {
-	client       ServiceClient
-	sessionId    string
-	tenantId     string
-	partitionKey string
+	client    ServiceClient
+	sessionId string
+	tenantId  string
 }
 
 func (f ReadOnlyDataStoreBuilder) WithTenantId(tenantId string) polycode.ReadOnlyDataStoreBuilder {
@@ -18,54 +22,44 @@ func (f ReadOnlyDataStoreBuilder) WithTenantId(tenantId string) polycode.ReadOnl
 	return f
 }
 
-func (f ReadOnlyDataStoreBuilder) WithPartitionKey(partitionKey string) polycode.ReadOnlyDataStoreBuilder {
-	f.partitionKey = partitionKey
-	return f
-}
-
 func (f ReadOnlyDataStoreBuilder) Get() polycode.ReadOnlyDataStore {
 	fmt.Printf("getting unsafe db for tenant id = %s and partition key = %s", f.tenantId, f.partitionKey)
 	return ReadOnlyDataStore{
-		client:       f.client,
-		sessionId:    f.sessionId,
-		tenantId:     f.tenantId,
-		partitionKey: f.partitionKey,
+		client:    f.client,
+		sessionId: f.sessionId,
+		tenantId:  f.tenantId,
 	}
 }
 
 type ReadOnlyDataStore struct {
-	client       ServiceClient
-	sessionId    string
-	tenantId     string
-	partitionKey string
+	client    ServiceClient
+	sessionId string
+	tenantId  string
 }
 
 func (r ReadOnlyDataStore) Collection(name string) polycode.ReadOnlyCollection {
 	return Collection{
-		client:       r.client,
-		sessionId:    r.sessionId,
-		tenantId:     r.tenantId,
-		partitionKey: r.partitionKey,
-		name:         name,
+		client:    r.client,
+		sessionId: r.sessionId,
+		tenantId:  r.tenantId,
+		name:      name,
 	}
 }
 
 func (r ReadOnlyDataStore) GlobalCollection(name string) polycode.ReadOnlyCollection {
 	return Collection{
-		client:       r.client,
-		sessionId:    r.sessionId,
-		tenantId:     r.tenantId,
-		partitionKey: r.partitionKey,
-		name:         name,
-		isGlobal:     true,
+		client:    r.client,
+		sessionId: r.sessionId,
+		tenantId:  r.tenantId,
+		name:      name,
+		isGlobal:  true,
 	}
 }
 
 type DataStoreBuilder struct {
-	client       ServiceClient
-	sessionId    string
-	tenantId     string
-	partitionKey string
+	client    ServiceClient
+	sessionId string
+	tenantId  string
 }
 
 func (f DataStoreBuilder) WithTenantId(tenantId string) polycode.DataStoreBuilder {
@@ -73,63 +67,53 @@ func (f DataStoreBuilder) WithTenantId(tenantId string) polycode.DataStoreBuilde
 	return f
 }
 
-func (f DataStoreBuilder) WithPartitionKey(partitionKey string) polycode.DataStoreBuilder {
-	f.partitionKey = partitionKey
-	return f
-}
-
 func (f DataStoreBuilder) Get() polycode.DataStore {
 	fmt.Printf("getting unsafe db for tenant id = %s and partition key = %s", f.tenantId, f.partitionKey)
 	return DataStore{
-		client:       f.client,
-		sessionId:    f.sessionId,
-		tenantId:     f.tenantId,
-		partitionKey: f.partitionKey,
+		client:    f.client,
+		sessionId: f.sessionId,
+		tenantId:  f.tenantId,
 	}
 }
 
 type DataStore struct {
-	client       ServiceClient
-	sessionId    string
-	tenantId     string
-	partitionKey string
+	client    ServiceClient
+	sessionId string
+	tenantId  string
 }
 
 func (d DataStore) Collection(name string) polycode.Collection {
 	return Collection{
-		client:       d.client,
-		sessionId:    d.sessionId,
-		tenantId:     d.tenantId,
-		partitionKey: d.partitionKey,
-		name:         name,
+		client:    d.client,
+		sessionId: d.sessionId,
+		tenantId:  d.tenantId,
+		name:      name,
 	}
 }
 
 func (d DataStore) GlobalCollection(name string) polycode.Collection {
 	return Collection{
-		client:       d.client,
-		sessionId:    d.sessionId,
-		tenantId:     d.tenantId,
-		partitionKey: d.partitionKey,
-		name:         name,
-		isGlobal:     true,
+		client:    d.client,
+		sessionId: d.sessionId,
+		tenantId:  d.tenantId,
+		name:      name,
+		isGlobal:  true,
 	}
 }
 
 type Collection struct {
-	client       ServiceClient
-	sessionId    string
-	name         string
-	isGlobal     bool
-	tenantId     string
-	partitionKey string
+	client    ServiceClient
+	sessionId string
+	name      string
+	isGlobal  bool
+	tenantId  string
 }
 
-func (c Collection) InsertOne(item interface{}) error {
+func (c Collection) InsertOne(id string, item interface{}) error {
 	return c.InsertOneWithTTL(item, -1)
 }
 
-func (c Collection) InsertOneWithTTL(item interface{}, expireIn time.Duration) error {
+func (c Collection) InsertOneWithTTL(id string, item interface{}, expireIn time.Duration) error {
 	var ttl int64
 	if expireIn == -1 {
 		ttl = -1
@@ -137,21 +121,14 @@ func (c Collection) InsertOneWithTTL(item interface{}, expireIn time.Duration) e
 		ttl = time.Now().Unix() + int64(expireIn.Seconds())
 	}
 
-	id, err := GetId(item)
-	if err != nil {
-		fmt.Printf("failed to get id: %s\n", err.Error())
-		return err
-	}
-
 	req := PutRequest{
-		TenantId:     c.tenantId,
-		PartitionKey: c.partitionKey,
-		Action:       "insert",
-		IsGlobal:     c.isGlobal,
-		Collection:   c.name,
-		Key:          id,
-		Item:         item,
-		TTL:          ttl,
+		TenantId:   c.tenantId,
+		Action:     "insert",
+		IsGlobal:   c.isGlobal,
+		Collection: c.name,
+		Key:        id,
+		Item:       item,
+		TTL:        ttl,
 	}
 
 	err = c.client.PutItem(c.sessionId, req)
@@ -293,4 +270,154 @@ func (c Collection) Query() polycode.Query {
 	return Query{
 		collection: &c,
 	}
+}
+
+type ReadOnlyQuery struct {
+	collection polycode.ReadOnlyCollection
+	filter     string
+	args       []any
+	limit      int
+}
+
+func (q Query) Filter(expr string, args ...interface{}) polycode.Query {
+	q.filter = expr
+	q.args = args
+	return q
+}
+
+func (q Query) Limit(limit int) polycode.Query {
+	q.limit = limit
+	return q
+}
+
+func (q Query) One(ctx context.Context, ret interface{}) (bool, error) {
+	req := QueryRequest{
+		TenantId:   q.collection.tenantId,
+		IsGlobal:   q.collection.isGlobal,
+		Collection: q.collection.name,
+		Key:        "",
+		Filter:     q.filter,
+		Args:       q.args,
+	}
+
+	r, err := q.collection.client.QueryItems(q.collection.sessionId, req)
+	if err != nil {
+		fmt.Printf("client: error query item %s\n", err.Error())
+		return false, err
+	}
+
+	if len(r) == 0 {
+		return false, nil
+	}
+
+	e := r[0]
+	err = ConvertType(e, ret)
+	if err != nil {
+		fmt.Printf("failed to convert type: %s\n", err.Error())
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (q Query) All(ctx context.Context, ret interface{}) error {
+	req := QueryRequest{
+		TenantId:     q.collection.tenantId,
+		PartitionKey: q.collection.partitionKey,
+		IsGlobal:     q.collection.isGlobal,
+		Collection:   q.collection.name,
+		Key:          "",
+		Filter:       q.filter,
+		Args:         q.args,
+		Limit:        q.limit,
+	}
+
+	r, err := q.collection.client.QueryItems(q.collection.sessionId, req)
+	if err != nil {
+		log.Println("client: error query item ", err.Error())
+		return err
+	}
+
+	err = ConvertType(r, ret)
+	if err != nil {
+		fmt.Printf("failed to convert type: %s\n", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+type Query struct {
+	collection *Collection
+	filter     string
+	args       []any
+	limit      int
+}
+
+func (q Query) Filter(expr string, args ...interface{}) polycode.Query {
+	q.filter = expr
+	q.args = args
+	return q
+}
+
+func (q Query) Limit(limit int) polycode.Query {
+	q.limit = limit
+	return q
+}
+
+func (q Query) One(ctx context.Context, ret interface{}) (bool, error) {
+	req := QueryRequest{
+		TenantId:   q.collection.tenantId,
+		IsGlobal:   q.collection.isGlobal,
+		Collection: q.collection.name,
+		Key:        "",
+		Filter:     q.filter,
+		Args:       q.args,
+	}
+
+	r, err := q.collection.client.QueryItems(q.collection.sessionId, req)
+	if err != nil {
+		fmt.Printf("client: error query item %s\n", err.Error())
+		return false, err
+	}
+
+	if len(r) == 0 {
+		return false, nil
+	}
+
+	e := r[0]
+	err = ConvertType(e, ret)
+	if err != nil {
+		fmt.Printf("failed to convert type: %s\n", err.Error())
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (q Query) All(ctx context.Context, ret interface{}) error {
+	req := QueryRequest{
+		TenantId:     q.collection.tenantId,
+		PartitionKey: q.collection.partitionKey,
+		IsGlobal:     q.collection.isGlobal,
+		Collection:   q.collection.name,
+		Key:          "",
+		Filter:       q.filter,
+		Args:         q.args,
+		Limit:        q.limit,
+	}
+
+	r, err := q.collection.client.QueryItems(q.collection.sessionId, req)
+	if err != nil {
+		log.Println("client: error query item ", err.Error())
+		return err
+	}
+
+	err = ConvertType(r, ret)
+	if err != nil {
+		fmt.Printf("failed to convert type: %s\n", err.Error())
+		return err
+	}
+
+	return nil
 }
