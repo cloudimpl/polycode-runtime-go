@@ -5,21 +5,81 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cloudimpl/polycode-sdk-go"
-	"github.com/cloudimpl/polycode-sdk-go/runtime"
+	errors2 "github.com/cloudimpl/polycode-sdk-go/errors"
 	"github.com/gin-gonic/gin"
 	"log"
 	"runtime/debug"
 )
 
+var CurrentRuntime Runtime
+
+type MethodStartEvent struct {
+	SessionId   string                      `json:"sessionId"`
+	Method      string                      `json:"method"`
+	Meta        polycode.HandlerContextMeta `json:"meta"`
+	AuthContext polycode.AuthContext        `json:"authContext"`
+	Input       any                         `json:"input"`
+}
+
+type ServiceStartEvent struct {
+	SessionId   string                      `json:"sessionId"`
+	Service     string                      `json:"service"`
+	Method      string                      `json:"method"`
+	Meta        polycode.HandlerContextMeta `json:"meta"`
+	AuthContext polycode.AuthContext        `json:"authContext"`
+	Input       any                         `json:"input"`
+}
+
+type ServiceCompleteEvent struct {
+	IsError    bool               `json:"isError"`
+	Output     any                `json:"output"`
+	Error      errors2.Error      `json:"error"`
+	Stacktrace errors2.Stacktrace `json:"stacktrace"`
+	Logs       []LogMsg           `json:"logs"`
+}
+
+type ApiStartEvent struct {
+	SessionId   string                      `json:"sessionId"`
+	Meta        polycode.HandlerContextMeta `json:"meta"`
+	AuthContext polycode.AuthContext        `json:"authContext"`
+	Request     polycode.ApiRequest         `json:"request"`
+}
+
+type ApiCompleteEvent struct {
+	Path     string               `json:"path"`
+	Response polycode.ApiResponse `json:"response"`
+	Logs     []LogMsg             `json:"logs"`
+}
+
+type ClientService interface {
+	GetName() string
+	GetDescription(method string) (string, error)
+	GetInputType(method string) (any, error)
+	GetOutputType(method string) (any, error)
+	IsWorkflow(method string) bool
+	ExecuteService(ctx polycode.ServiceContext, method string, input any) (any, error)
+	ExecuteWorkflow(ctx polycode.WorkflowContext, method string, input any) (any, error)
+}
+
+type Runtime interface {
+	RegisterService(service Service) error
+	RegisterApi(httpHandler *gin.Engine) error
+	RegisterValidator(validator polycode.Validator) error
+	GetValidator() polycode.Validator
+	RunService(ctx context.Context, event ServiceStartEvent) (evt ServiceCompleteEvent)
+	RunApi(ctx context.Context, event ApiStartEvent) (evt ApiCompleteEvent)
+	Start() error
+}
+
 type ClientRuntime struct {
 	env         ClientEnv
-	serviceMap  map[string]runtime.Service
+	serviceMap  map[string]ClientService
 	httpHandler *gin.Engine
 	client      ServiceClient
 	validator   polycode.Validator
 }
 
-func (c ClientRuntime) getService(serviceName string) (runtime.Service, error) {
+func (c ClientRuntime) getService(serviceName string) (ClientService, error) {
 	service := c.serviceMap[serviceName]
 	if service == nil {
 		return nil, fmt.Errorf("client: service %s not registered", serviceName)
@@ -34,7 +94,7 @@ func (c ClientRuntime) getApi() (*gin.Engine, error) {
 	return c.httpHandler, nil
 }
 
-func (c ClientRuntime) RegisterService(service runtime.Service) error {
+func (c ClientRuntime) RegisterService(service ClientService) error {
 	log.Println("client: register service ", service.GetName())
 
 	if c.serviceMap[service.GetName()] != nil {
@@ -256,4 +316,24 @@ func (c ClientRuntime) RunApi(ctx context.Context, event ApiStartEvent) (evt Api
 	return ApiCompleteEvent{
 		Response: res,
 	}
+}
+
+func RegisterService(service Service) error {
+	return CurrentRuntime.RegisterService(service)
+}
+
+func RegisterApi(httpHandler *gin.Engine) error {
+	return CurrentRuntime.RegisterApi(httpHandler)
+}
+
+func RegisterValidator(validator polycode.Validator) error {
+	return CurrentRuntime.RegisterValidator(validator)
+}
+
+func GetValidator() polycode.Validator {
+	return CurrentRuntime.GetValidator()
+}
+
+func Start() error {
+	return CurrentRuntime.Start()
 }

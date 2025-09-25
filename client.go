@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const AgentNameHeader = "X-Sidecar-Agent-Name"
+
 const (
 	Insert DbAction = "insert"
 	Update DbAction = "update"
@@ -21,6 +23,23 @@ const (
 type TaskStatus int8
 
 type DbAction string
+
+type RouteData struct {
+	Method string `json:"method"`
+	Path   string `json:"path"`
+}
+
+type ServiceDescription struct {
+	Name  string              `json:"name"`
+	Tasks []MethodDescription `json:"tasks"`
+}
+
+type MethodDescription struct {
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	IsWorkflow  bool        `json:"isWorkflow"`
+	Input       interface{} `json:"input"`
+}
 
 type StartAppRequest struct {
 	AppName    string               `json:"appName"`
@@ -247,6 +266,10 @@ type ReleaseLockRequest struct {
 type IncrementCounterResponse struct {
 	Value       uint64 `json:"value"`
 	Incremented bool   `json:"incremented"`
+}
+
+type ErrorEvent struct {
+	Error errors.Error `json:"error"`
 }
 
 // NewServiceClient creates a new ServiceClient with a reusable HTTP client

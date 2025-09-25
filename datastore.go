@@ -2,14 +2,12 @@ package runtime
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/cloudimpl/polycode-sdk-go"
 	"log"
 	"time"
 )
-
-type Doc struct {
-}
 
 type ReadOnlyDataStoreBuilder struct {
 	client    ServiceClient
@@ -68,7 +66,7 @@ func (f DataStoreBuilder) WithTenantId(tenantId string) polycode.DataStoreBuilde
 }
 
 func (f DataStoreBuilder) Get() polycode.DataStore {
-	fmt.Printf("getting unsafe db for tenant id = %s and partition key = %s", f.tenantId, f.partitionKey)
+	fmt.Printf("getting db for tenant id = %s", f.tenantId)
 	return DataStore{
 		client:    f.client,
 		sessionId: f.sessionId,
@@ -101,12 +99,99 @@ func (d DataStore) GlobalCollection(name string) polycode.Collection {
 	}
 }
 
+type ReadOnlyDoc struct {
+	parent polycode.ReadOnlyDoc
+	path   string
+	id     string
+	val    string
+}
+
+func (r ReadOnlyDoc) Unmarshal(item interface{}) error {
+	return json.Unmarshal([]byte(d.val), item)
+}
+
+func (r ReadOnlyDoc) ExpireIn(expireIn time.Duration) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r ReadOnlyDoc) Update(item interface{}) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r ReadOnlyDoc) Delete() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r ReadOnlyDoc) Collection(name string) polycode.ReadOnlyCollection {
+	//TODO implement me
+	panic("implement me")
+}
+
+type Doc struct {
+	parent polycode.Doc
+	path   string
+	id     string
+	val    string
+}
+
+func (d Doc) Unmarshal(item interface{}) error {
+	return json.Unmarshal([]byte(d.val), item)
+}
+
+func (d Doc) ExpireIn(expireIn time.Duration) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (d Doc) Update(item interface{}) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (d Doc) Delete() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (d Doc) Collection(name string) polycode.Collection {
+	//TODO implement me
+	panic("implement me")
+}
+
 type Collection struct {
 	client    ServiceClient
 	sessionId string
 	name      string
 	isGlobal  bool
 	tenantId  string
+}
+
+func (c Collection) GetOne(id string) (polycode.Doc, bool, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c Collection) InsertOne(id string, item interface{}) (polycode.Doc, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c Collection) UpdateOne(id string, item interface{}) (polycode.Doc, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c Collection) UpsertOne(id string, item interface{}) (polycode.Doc, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c Collection) DeleteOne(id string) (polycode.Doc, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (c Collection) InsertOne(id string, item interface{}) error {

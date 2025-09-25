@@ -3,7 +3,6 @@ package runtime
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/cloudimpl/polycode-sdk-go"
 	errors2 "github.com/cloudimpl/polycode-sdk-go/errors"
 	"github.com/cloudimpl/polycode-sdk-go/runtime"
@@ -153,30 +152,4 @@ func ConvertType(input any, output any) error {
 	}
 
 	return json.Unmarshal(in, output)
-}
-
-func GetId(item any) (string, error) {
-	id := ""
-	v := reflect.ValueOf(item)
-	t := reflect.TypeOf(item)
-
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-		t = t.Elem()
-	}
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		value := v.Field(i).Interface()
-
-		// Skip the PKEY and RKEY fields
-		if field.Tag.Get("polycode") == "id" {
-			id = value.(string)
-			break
-		}
-	}
-
-	if id == "" {
-		return "", fmt.Errorf("id not found")
-	}
-	return id, nil
 }
