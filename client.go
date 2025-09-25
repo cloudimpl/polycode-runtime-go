@@ -159,11 +159,6 @@ type GetFileRequest struct {
 	Key string `json:"key"`
 }
 
-type GetUploadLinkRequest struct {
-	Key      string `json:"key"`
-	TempFile bool   `json:"tempFile"`
-}
-
 // GetFileResponse represents the JSON structure for get file response
 type GetFileResponse struct {
 	Content string `json:"content"`
@@ -298,7 +293,7 @@ type ServiceClient interface {
 	GetFile(sessionId string, req GetFileRequest) (GetFileResponse, error)
 	GetFileDownloadLink(sessionId string, req GetFileRequest) (GetLinkResponse, error)
 	PutFile(sessionId string, req PutFileRequest) error
-	GetFileUploadLink(sessionId string, req GetUploadLinkRequest) (GetLinkResponse, error)
+	GetFileUploadLink(sessionId string, req GetFileRequest) (GetLinkResponse, error)
 	DeleteFile(sessionId string, req DeleteFileRequest) error
 	RenameFile(sessionId string, req RenameFileRequest) error
 	ListFile(sessionId string, req ListFilePageRequest) (ListFilePageResponse, error)
